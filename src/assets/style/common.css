@@ -1,0 +1,27 @@
+* {
+  padding: 0;
+  margin: 0;
+}
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
+#app {
+  width: 100%;
+  height: 100%;
+}
+
+canvas {
+  margin: 0 auto;
+}
+
+.mock-input {
+  position: absolute;
+  border: unset;
+  color: transparent;
+  background-color: transparent;
+  width: 1px;
+  height: 20px;
+  caret-color: transparent;
+}
