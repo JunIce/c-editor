@@ -1,30 +1,35 @@
+import BlockContainer from "./core/BlockContainer";
 import { addEventListener } from "./utils";
 
-const fontSizeMap = new Map<string, TextMetrics>();
-
-interface BlockItem {
-  s: string;
-  textMetrics: TextMetrics;
+export interface ConfigProps {
+  width: number;
+  height: number;
+  paddingX: number;
+  paddingY: number;
 }
+
 export default class Editor {
   container: HTMLDivElement;
-  ctx: CanvasRenderingContext2D;
-  input: HTMLTextAreaElement;
-  font: string;
+  ctx!: CanvasRenderingContext2D;
+  input!: HTMLTextAreaElement;
   dpr: number;
 
-  config: any = {};
+  config: ConfigProps = {
+    width: 1000,
+    height: 500,
+    paddingX: 30,
+    paddingY: 30,
+  };
 
-  blocks: BlockItem[];
+  blocksContainer: BlockContainer;
 
   constructor(options: any) {
     this.container = document.querySelector(options.selector);
-    this.font = "normal 16px Aria";
     this.dpr = window.devicePixelRatio;
-    this.blocks = [];
+    this.blocksContainer = new BlockContainer(this);
 
     this.config.width = options.width || 1000;
-    this.config.height = options.height || 400;
+    this.config.height = options.height || 500;
   }
 
   init() {
@@ -51,8 +56,6 @@ export default class Editor {
   }
 
   _drawClick(e: MouseEvent) {
-    console.log("", e);
-
     const { clientX, clientY } = e;
 
     this.input.style.top = clientY + "px";
@@ -72,47 +75,20 @@ export default class Editor {
   }
 
   _inputEvent(e: InputEvent) {
-    // console.log/("", e);
     const { data } = e;
 
-    console.log("", data);
-
-    (data || "").split("").forEach((char) => {
-      const textMetrics = this.measureText(char);
-      this.blocks.push({ s: char, textMetrics });
-    });
+    this.blocksContainer.push(data || "");
 
     this.render();
   }
 
-  measureText(char: string) {
-    this.ctx.font = this.font;
-    let textMetrics!: TextMetrics;
-    const TEXT_KEY = `${this.font}_${char}`;
-    const cache = fontSizeMap.get(TEXT_KEY);
-    if (cache) {
-      textMetrics = cache;
-    } else {
-      textMetrics = this.ctx.measureText(char);
-      fontSizeMap.set(TEXT_KEY, textMetrics);
-    }
-
-    return textMetrics;
-  }
-
   render() {
     this.ctx.clearRect(0, 0, this.config.width, this.config.height);
-    this.ctx.save();
 
-    let x = 30;
-    let y = 30;
+    const data = this.blocksContainer.renderBlocks;
 
-    this.blocks.forEach((block, idx) => {
-      this.ctx.fillText(block.s, x, y);
-
-      x += block.textMetrics.width;
+    data.forEach((text) => {
+      this.ctx.fillText(text.s, text.x, text.y);
     });
-
-    this.ctx.restore();
   }
 }
