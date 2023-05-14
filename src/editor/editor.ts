@@ -35,6 +35,7 @@ export default class Editor {
   init() {
     this.createPageCtx();
     this.inputAgent();
+    this.drawBorder();
   }
 
   createPageCtx() {
@@ -53,6 +54,17 @@ export default class Editor {
     this.container.appendChild(canvas);
 
     this.ctx = ctx!;
+  }
+
+  drawBorder() {
+    this.ctx.beginPath();
+    this.ctx.strokeStyle = "#333";
+    this.ctx.strokeRect(
+      this.config.paddingX,
+      this.config.paddingY,
+      this.config.width - 2 * this.config.paddingX,
+      this.config.height - 2 * this.config.paddingY
+    );
   }
 
   _drawClick(e: MouseEvent) {
@@ -84,7 +96,12 @@ export default class Editor {
   }
 
   render() {
-    this.ctx.clearRect(0, 0, this.config.width, this.config.height);
+    this.ctx.clearRect(
+      this.config.paddingX,
+      this.config.paddingY,
+      this.config.width - 2 * this.config.paddingX,
+      this.config.height - 2 * this.config.paddingY
+    );
     const data = this.blocksContainer.renderBlocks;
 
     data.forEach((texts) => {

@@ -46,17 +46,25 @@ export default class BlockContainer extends Base {
       const texts = block.texts;
       renderData[i] = [];
 
+      let maxHeight = 0;
+
       for (let j = 0; j < texts.length; j++) {
         const text = texts[j];
 
-        renderData[i].push({
-          s: text.char,
-          x: Math.ceil(this.config.paddingX + currentWidth),
-          y: currentHeight + line * 30,
-          metrics: text.metrics,
-        });
+        if (currentWidth + text.metrics.width < ctxRenderWidth) {
+          maxHeight = Math.max(
+            maxHeight,
+            text.metrics.fontBoundingBoxAscent +
+              text.metrics.fontBoundingBoxDescent
+          );
 
-        if (currentWidth < ctxRenderWidth) {
+          renderData[i].push({
+            s: text.char,
+            x: Math.ceil(this.config.paddingX + currentWidth),
+            y: currentHeight + maxHeight + line * maxHeight,
+            metrics: text.metrics,
+          });
+
           currentWidth += text.metrics.width;
         } else {
           line++;
