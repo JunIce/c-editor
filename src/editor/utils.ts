@@ -17,3 +17,7 @@ export const removeEventListener = (
 ) => {
   el.removeEventListener(event, listener, options);
 };
+
+export const frameRender = (fn: any) => {
+  requestAnimationFrame(fn);
+};

@@ -57,8 +57,9 @@ export default class Editor {
 
   _drawClick(e: MouseEvent) {
     const { clientX, clientY } = e;
+    const { height } = this.input.getBoundingClientRect();
 
-    this.input.style.top = clientY + "px";
+    this.input.style.top = clientY - height / 2 + "px";
     this.input.style.left = clientX + "px";
 
     this.input.focus();
@@ -84,11 +85,15 @@ export default class Editor {
 
   render() {
     this.ctx.clearRect(0, 0, this.config.width, this.config.height);
-
     const data = this.blocksContainer.renderBlocks;
 
-    data.forEach((text) => {
-      this.ctx.fillText(text.s, text.x, text.y);
+    data.forEach((texts) => {
+      texts.forEach((text) => this.ctx.fillText(text.s, text.x, text.y));
     });
+  }
+
+  renderText(s: string) {
+    this.blocksContainer.push(s);
+    this.render();
   }
 }
