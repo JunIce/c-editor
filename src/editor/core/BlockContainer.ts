@@ -8,6 +8,9 @@ export interface RenderText {
   x: number
   y: number
   metrics: TextMetrics
+  textHeight?: number
+  blockIndex: number
+  textIndex: number
 }
 
 export default class BlockContainer extends Base {
@@ -42,39 +45,48 @@ export default class BlockContainer extends Base {
     const ctxRenderWidth = this.config.width - 2 * this.config.paddingX
     let currentWidth = 0
     let currentHeight = this.config.paddingY
-    let line = 0
 
     for (let i = 0; i < this.blocks.length; i++) {
       const block = this.blocks[i]
       const texts = block.texts
       renderData[i] = []
 
+      let line = 0
       let maxHeight = 0
-
+      let blockHeight = 0
       for (let j = 0; j < texts.length; j++) {
         const text = texts[j]
 
         if (currentWidth + text.metrics.width < ctxRenderWidth) {
-          maxHeight = Math.max(
-            maxHeight,
+          const textHeight =
             text.metrics.fontBoundingBoxAscent +
-              text.metrics.fontBoundingBoxDescent
-          )
+            text.metrics.fontBoundingBoxDescent
+          maxHeight = Math.max(maxHeight, textHeight)
+          // offset
+          if (blockHeight === 0) {
+            blockHeight = maxHeight
+          }
 
           renderData[i].push({
+            blockIndex: i,
+            textIndex: j,
             s: text.char,
+            textHeight: textHeight,
             x: Math.ceil(this.config.paddingX + currentWidth),
-            y: currentHeight + maxHeight + line * maxHeight,
+            y: Math.ceil(currentHeight + blockHeight),
             metrics: text.metrics,
           })
 
           currentWidth += text.metrics.width
         } else {
           line++
+          blockHeight += maxHeight
+          maxHeight = 0
           currentWidth = 0
         }
       }
-      line += 1
+      block.height = blockHeight
+      currentHeight += block.height
       currentWidth = 0
     }
 

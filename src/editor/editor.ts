@@ -3,6 +3,8 @@ import { addEventListener } from "./utils"
 import Text from "./core/Text"
 import { handleKeyboardEvent } from "./core/KeyboardEvent"
 import { EventManager, EventType } from "./core/EventManager"
+import { Cursor } from "./core/Cursor"
+import { createCanvasCtx } from "./core/CanvasCtx"
 
 export interface ConfigProps {
   width: number
@@ -13,10 +15,11 @@ export interface ConfigProps {
 
 export default class Editor {
   container: HTMLDivElement
+  canvas: HTMLCanvasElement
   ctx!: CanvasRenderingContext2D
-  input!: HTMLTextAreaElement
   events: EventManager
   dpr: number
+  cursor: Cursor
 
   config: ConfigProps = {
     width: 1000,
@@ -32,14 +35,21 @@ export default class Editor {
     this.dpr = window.devicePixelRatio
     this.blocksContainer = new BlockContainer(this)
     this.events = new EventManager(this)
+    this.cursor = new Cursor(this)
 
     this.config.width = options.width || 1000
     this.config.height = options.height || 500
+    this.canvas = createCanvasCtx({
+      width: this.config.width,
+      height: this.config.height,
+      dpr: this.dpr,
+    })
+
+    this.container.appendChild(this.canvas)
+    this.ctx = this.canvas.getContext("2d")!
   }
 
   init() {
-    this.createPageCtx()
-    this.inputAgent()
     this.drawBorder()
     this._bindEvents()
   }
@@ -47,6 +57,7 @@ export default class Editor {
   _bindEvents() {
     this.events.on(EventType.RENDER, this.render.bind(this))
     this.events.on(EventType.TEXT_DELETE, this._deleteText.bind(this))
+    addEventListener(this.canvas, "click", this._drawClick.bind(this), false)
   }
 
   _deleteText() {
@@ -57,24 +68,6 @@ export default class Editor {
       this.blocksContainer.deleteLast()
     }
     this.events.emit(EventType.RENDER)
-  }
-
-  createPageCtx() {
-    const canvas = document.createElement("canvas")
-    const ctx = canvas.getContext("2d")
-
-    canvas.width = this.config.width * this.dpr
-    canvas.height = this.config.height * this.dpr
-    canvas.style.width = this.config.width + "px"
-    canvas.style.height = this.config.height + "px"
-    ctx?.scale(this.dpr, this.dpr)
-    canvas.style.border = "1px solid #ccc"
-
-    addEventListener(canvas, "click", this._drawClick.bind(this))
-
-    this.container.appendChild(canvas)
-
-    this.ctx = ctx!
   }
 
   drawBorder() {
@@ -90,34 +83,42 @@ export default class Editor {
 
   _drawClick(e: MouseEvent) {
     const { clientX, clientY } = e
-    const { height } = this.input.getBoundingClientRect()
-
-    this.input.style.top = clientY - height / 2 + "px"
-    this.input.style.left = clientX + "px"
-
-    this.input.focus()
+    let { offsetTop, offsetLeft, clientWidth, clientHeight } = this.container
+    const { paddingY, paddingX } = this.config
+    offsetTop = offsetTop + document.documentElement.scrollTop
+    console.log(clientX, offsetLeft + paddingX, clientY, paddingY + offsetTop)
+    // 判断是否是点击区域
+    if (
+      clientX >= offsetLeft + paddingX &&
+      clientY >= offsetTop + paddingY &&
+      clientX <= clientWidth + offsetLeft - paddingX &&
+      clientY <= clientHeight + offsetTop - paddingY
+    ) {
+      console.log(1111, clientX, clientY)
+      this._computedPosition(
+        clientX - offsetLeft - paddingX,
+        clientY - offsetTop - paddingY
+      )
+      this.cursor.focus()
+    } else {
+      this.cursor.blur()
+    }
   }
 
-  inputAgent() {
-    const textarea: HTMLTextAreaElement = document.createElement("textarea")
-    textarea.className = "mock-input"
-    addEventListener(textarea, "keydown", (e) =>
-      handleKeyboardEvent.call(null, e, this)
-    )
-    addEventListener(textarea, "input", this._inputEvent.bind(this))
+  _computedPosition(x: number, y: number) {
+    const blocks = this.blocksContainer.renderBlocks
 
-    this.input = textarea
-    this.container.appendChild(textarea)
-  }
-
-  _inputEvent(e: InputEvent) {
-    const { data } = e
-    const lastBlock = this.blocksContainer.lastBlock
-    data?.split("").forEach((char) => {
-      const text = new Text(char, this.ctx)
-      lastBlock.push(text)
-    })
-    this.events.emit(EventType.RENDER)
+    parent: for (let i = 0; i < blocks.length; i++) {
+      let texts = blocks[i]
+      for (let j = 0; j < texts.length; j++) {
+        if (texts[j].y > y && texts[j].x > x) {
+          console.log(i, j, texts[j])
+          break parent
+        } else {
+          continue
+        }
+      }
+    }
   }
 
   render() {
@@ -132,6 +133,7 @@ export default class Editor {
     data.forEach((texts) => {
       texts.forEach((text) => this.ctx.fillText(text.s, text.x, text.y))
     })
+    console.log(data)
   }
 
   renderText(s: string) {

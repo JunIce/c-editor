@@ -13,5 +13,5 @@ export const handleKeyboardEvent = (event: KeyboardEvent, editor: Editor) => {
   } else if (keyCode === KeyCode.ARROW_LEFT) {
   } else if (keyCode === KeyCode.ARROW_RIGHT) {
   }
-  console.log(event)
+  // console.log(event)
 }
