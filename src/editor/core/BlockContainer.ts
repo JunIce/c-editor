@@ -77,4 +77,8 @@ export default class BlockContainer extends Base {
 
     return renderData;
   }
+
+  get lastBlock(): BlockContext {
+    return this.blocks[this.blocks.length - 1];
+  }
 }

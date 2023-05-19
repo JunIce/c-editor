@@ -1,5 +1,8 @@
 import BlockContainer from "./core/BlockContainer";
 import { addEventListener } from "./utils";
+import Text from "./core/Text";
+import { handleKeyboardEvent } from "./core/KeyboardEvent";
+import { EventManager, EventType } from "./core/EventManager";
 
 export interface ConfigProps {
   width: number;
@@ -12,6 +15,7 @@ export default class Editor {
   container: HTMLDivElement;
   ctx!: CanvasRenderingContext2D;
   input!: HTMLTextAreaElement;
+  events: EventManager;
   dpr: number;
 
   config: ConfigProps = {
@@ -27,6 +31,7 @@ export default class Editor {
     this.container = document.querySelector(options.selector);
     this.dpr = window.devicePixelRatio;
     this.blocksContainer = new BlockContainer(this);
+    this.events = new EventManager(this);
 
     this.config.width = options.width || 1000;
     this.config.height = options.height || 500;
@@ -36,6 +41,18 @@ export default class Editor {
     this.createPageCtx();
     this.inputAgent();
     this.drawBorder();
+    this._bindEvents();
+  }
+
+  _bindEvents() {
+    this.events.on(EventType.RENDER, this.render.bind(this));
+    this.events.on(EventType.TEXT_DELETE, this._deleteText.bind(this));
+  }
+
+  _deleteText() {
+    const lastBlock = this.blocksContainer.lastBlock;
+    lastBlock.delete();
+    this.events.emit(EventType.RENDER);
   }
 
   createPageCtx() {
@@ -80,7 +97,9 @@ export default class Editor {
   inputAgent() {
     const textarea: HTMLTextAreaElement = document.createElement("textarea");
     textarea.className = "mock-input";
-
+    addEventListener(textarea, "keydown", (e) =>
+      handleKeyboardEvent.call(null, e, this)
+    );
     addEventListener(textarea, "input", this._inputEvent.bind(this));
 
     this.input = textarea;
@@ -89,10 +108,12 @@ export default class Editor {
 
   _inputEvent(e: InputEvent) {
     const { data } = e;
-
-    this.blocksContainer.push(data || "");
-
-    this.render();
+    const lastBlock = this.blocksContainer.lastBlock;
+    data?.split("").forEach((char) => {
+      const text = new Text(char, this.ctx);
+      lastBlock.push(text);
+    });
+    this.events.emit(EventType.RENDER);
   }
 
   render() {
@@ -111,6 +132,6 @@ export default class Editor {
 
   renderText(s: string) {
     this.blocksContainer.push(s);
-    this.render();
+    this.events.emit(EventType.RENDER);
   }
 }
