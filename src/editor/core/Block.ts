@@ -1,21 +1,21 @@
-import Text from "./Text";
+import Text from "./Text"
 
 export interface BlockContext {
-  texts: Text[];
-  push: (text: Text) => void;
-  delete: () => void;
+  texts: Text[]
+  push: (text: Text) => void
+  delete: () => void
 }
 
 export const createBlockContext = (): BlockContext => {
   const block: BlockContext = {
     texts: [],
     push: (text: Text) => {
-      block.texts.push(text);
+      block.texts.push(text)
     },
     delete: () => {
-      block.texts.pop();
+      block.texts.pop()
     },
-  };
+  }
 
-  return block;
-};
+  return block
+}

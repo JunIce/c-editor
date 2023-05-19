@@ -1,4 +1,4 @@
-import Editor from "../editor";
+import Editor from "../editor"
 
 export enum EventType {
   RENDER = "RENDER",
@@ -6,19 +6,19 @@ export enum EventType {
 }
 
 export class EventManager {
-  eventMap: Record<string, any>;
-  editor: Editor;
+  eventMap: Record<string, any>
+  editor: Editor
   constructor(editor: Editor) {
-    this.editor = editor;
-    this.eventMap = {};
+    this.editor = editor
+    this.eventMap = {}
   }
 
   on(eventName: string, handler: Function) {
-    this.eventMap[eventName] = this.eventMap[eventName] || [];
-    this.eventMap[eventName].push(handler);
+    this.eventMap[eventName] = this.eventMap[eventName] || []
+    this.eventMap[eventName].push(handler)
   }
 
   emit(eventName: string) {
-    this.eventMap[eventName].forEach((f: Function) => f(this.editor));
+    this.eventMap[eventName].forEach((f: Function) => f(this.editor))
   }
 }
