@@ -24,8 +24,8 @@ export default class Editor {
   config: ConfigProps = {
     width: 1000,
     height: 500,
-    paddingX: 30,
-    paddingY: 30,
+    paddingX: 20,
+    paddingY: 20,
   }
 
   blocksContainer: BlockContainer
@@ -47,6 +47,10 @@ export default class Editor {
 
     this.container.appendChild(this.canvas)
     this.ctx = this.canvas.getContext("2d")!
+  }
+
+  public get scrollTop(): number {
+    return document.documentElement.scrollTop
   }
 
   init() {
@@ -85,21 +89,21 @@ export default class Editor {
     const { clientX, clientY } = e
     let { offsetTop, offsetLeft, clientWidth, clientHeight } = this.container
     const { paddingY, paddingX } = this.config
-    offsetTop = offsetTop + document.documentElement.scrollTop
-    console.log(clientX, offsetLeft + paddingX, clientY, paddingY + offsetTop)
+
+    const scrollTop = this.scrollTop
     // 判断是否是点击区域
     if (
       clientX >= offsetLeft + paddingX &&
-      clientY >= offsetTop + paddingY &&
+      clientY + scrollTop >= offsetTop + paddingY &&
       clientX <= clientWidth + offsetLeft - paddingX &&
-      clientY <= clientHeight + offsetTop - paddingY
+      clientY + scrollTop <= clientHeight + offsetTop - paddingY
     ) {
-      console.log(1111, clientX, clientY)
       this._computedPosition(
         clientX - offsetLeft - paddingX,
         clientY - offsetTop - paddingY
       )
       this.cursor.focus()
+      this.cursor.setCursorPosition(clientX, clientY)
     } else {
       this.cursor.blur()
     }
@@ -133,7 +137,6 @@ export default class Editor {
     data.forEach((texts) => {
       texts.forEach((text) => this.ctx.fillText(text.s, text.x, text.y))
     })
-    console.log(data)
   }
 
   renderText(s: string) {

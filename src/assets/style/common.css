@@ -17,11 +17,50 @@ canvas {
 }
 
 .mock-input {
+  width: 100px;
+  height: 30px;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  left: 0;
+  right: 0;
+  letter-spacing: 0;
+  font-size: 12px;
   position: absolute;
-  border: unset;
+  z-index: -1;
+  outline: none;
+  resize: none;
+  border: none;
+  overflow: hidden;
   color: transparent;
+  user-select: none;
   background-color: transparent;
+}
+
+#cursor {
   width: 1px;
-  height: 20px;
-  caret-color: transparent;
+  height: 24px;
+  position: absolute;
+  top: -999px;
+  left: -999px;
+  background-color: #1e6fff;
+  z-index: 20;
+  pointer-events: none;
+  cursor: text;
+  transform-origin: center center;
+  animation: caret-blink 1s infinite linear;
+}
+
+@keyframes caret-blink {
+  0%,
+  63%,
+  to {
+    background-color: #1e6fff;
+  }
+
+  13%,
+  50% {
+    background-color: transparent;
+  }
 }

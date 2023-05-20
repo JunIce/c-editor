@@ -12,6 +12,7 @@ export class Cursor extends Base {
   }
 
   input!: HTMLTextAreaElement | null
+  mockCursor!: HTMLDivElement | null
 
   constructor(options: Editor) {
     super(options)
@@ -20,6 +21,23 @@ export class Cursor extends Base {
       x: 0,
       y: 0,
     }
+
+    this.mockCursor = this._mockCursor()
+  }
+
+  _mockCursor(): HTMLDivElement {
+    const cursorDom = document.createElement("div")
+    cursorDom.id = "cursor"
+
+    return cursorDom
+  }
+
+  setCursorPosition(x: number, y: number) {
+    this.input!.style.top = y + "px"
+    this.input!.style.left = x + "px"
+
+    this.mockCursor!.style.top = y + "px"
+    this.mockCursor!.style.left = x + "px"
   }
 
   focus() {
@@ -33,12 +51,14 @@ export class Cursor extends Base {
       this.container.appendChild(textarea)
       this.input = textarea
     }
+    this.container.appendChild(this.mockCursor!)
     this.input.focus()
   }
 
   blur() {
     this.input && this.container.removeChild(this.input)
     this.input = null
+    this.mockCursor?.remove()
   }
 
   _inputEvent(e: InputEvent) {
