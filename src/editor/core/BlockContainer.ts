@@ -52,16 +52,16 @@ export default class BlockContainer extends Base {
       renderData[i] = []
 
       let line = 0
-      let maxHeight = 0
+      const firstText = texts[0] || 26
+
+      let maxHeight =
+        firstText.metrics.fontBoundingBoxAscent +
+        firstText.metrics.fontBoundingBoxDescent
       let blockHeight = 0
       for (let j = 0; j < texts.length; j++) {
         const text = texts[j]
 
         if (currentWidth + text.metrics.width < ctxRenderWidth) {
-          const textHeight =
-            text.metrics.fontBoundingBoxAscent +
-            text.metrics.fontBoundingBoxDescent
-          maxHeight = Math.max(maxHeight, textHeight)
           // offset
           if (blockHeight === 0) {
             blockHeight = maxHeight
@@ -71,7 +71,7 @@ export default class BlockContainer extends Base {
             blockIndex: i,
             textIndex: j,
             s: text.char,
-            textHeight: textHeight,
+            textHeight: maxHeight,
             x: Math.ceil(this.config.paddingX + currentWidth),
             y: Math.ceil(currentHeight + blockHeight),
             metrics: text.metrics,
@@ -81,7 +81,6 @@ export default class BlockContainer extends Base {
         } else {
           line++
           blockHeight += maxHeight
-          maxHeight = 0
           currentWidth = 0
         }
       }
