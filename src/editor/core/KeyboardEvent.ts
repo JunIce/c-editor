@@ -4,6 +4,7 @@ import { KeyCode } from "./enums/keycode"
 
 export const handleKeyboardEvent = (event: KeyboardEvent, editor: Editor) => {
   const keyCode = event.keyCode
+  if (editor.cursor.composing) return
 
   if (keyCode === KeyCode.BACKSPACE) {
     event.preventDefault()

@@ -1,10 +1,8 @@
 import BlockContainer from "./core/BlockContainer"
-import { addEventListener } from "./utils"
-import Text from "./core/Text"
-import { handleKeyboardEvent } from "./core/KeyboardEvent"
+import { addEventListener, computedTextMetries } from "./utils"
 import { EventManager, EventType } from "./core/EventManager"
-import { Cursor } from "./core/Cursor"
-import { createCanvasCtx } from "./core/CanvasCtx"
+import { Cursor, PositionIdx } from "./core/Cursor"
+import { LineCtx, RenderElementText, createCanvasCtx } from "./core/CanvasCtx"
 
 export interface ConfigProps {
   width: number
@@ -51,6 +49,10 @@ export default class Editor {
 
   public get scrollTop(): number {
     return document.documentElement.scrollTop
+  }
+
+  public get scrollLeft(): number {
+    return document.documentElement.scrollLeft
   }
 
   init() {
@@ -102,34 +104,96 @@ export default class Editor {
       clientX <= clientWidth + offsetLeft - paddingX &&
       clientY + scrollTop <= clientHeight + offsetTop - paddingY
     ) {
-      this._computedPosition(
-        clientX - offsetLeft - paddingX,
-        clientY - offsetTop - paddingY
+      const position = this._computedPositionElementByXY(
+        clientX - offsetLeft,
+        Math.ceil(clientY + scrollTop - offsetTop)
       )
+      this.cursor.setPosition(position)
+
+      const { x, y } = this._computedTargetCursorPosition(position)
+      this.cursor.setPositionXY({ x, y })
       this.cursor.focus()
-      this.cursor.setCursorPosition(clientX, clientY + scrollTop)
+      this.cursor.setCursorPosition()
     } else {
       this.cursor.blur()
     }
   }
 
-  _computedPosition(x: number, y: number) {
-    const blocks = this.blocksContainer.renderBlocks
+  _computedTargetCursorPosition(result: PositionIdx) {
+    let { offsetTop, offsetLeft } = this.container
 
-    // parent: for (let i = 0; i < blocks.length; i++) {
-    //   let texts = blocks[i]
-    //   for (let j = 0; j < texts.length; j++) {
-    //     if (texts[j].y > y && texts[j].x > x) {
-    //       console.log(i, j, texts[j])
-    //       break parent
-    //     } else {
-    //       continue
-    //     }
-    //   }
-    // }
+    let x = offsetLeft
+    let y = offsetTop
+
+    const element = this.blocksContainer.blocks[result.p]?.children[result.l]
+      ?.children[result.i] as RenderElementText
+
+    if (element) {
+      const { rightTop } = computedTextMetries(element)
+
+      x += rightTop[0]
+      y += rightTop[1]
+    }
+
+    return {
+      x,
+      y,
+    }
+  }
+
+  _computedPositionElementByXY(x: number, y: number) {
+    const blocks = this.blocksContainer.blocks
+
+    // position p
+    let p = 0
+    let l = -1
+    let idx = -1
+    let preHeight = this.config.paddingY
+    for (; p < blocks.length; p++) {
+      if (y < preHeight + blocks[p].height) {
+        let { l: line, idx: i } = position(blocks[p].children)
+        l = line
+        idx = i
+        break
+      } else {
+        preHeight += blocks[p].height
+      }
+    }
+
+    function position(lines: LineCtx[]) {
+      let l = 0
+      let idx = 0
+
+      line: for (; l < lines.length; l++) {
+        const texts = lines[l].children
+
+        for (let i = 0; i < texts.length; i++) {
+          const text = texts[i] as RenderElementText
+          const { leftTop, leftBottom, rightTop } = computedTextMetries(text)
+
+          if (
+            x >= leftTop[0] &&
+            x <= rightTop[0] &&
+            y >= leftTop[1] &&
+            y <= leftBottom[1]
+          ) {
+            idx = i
+            break line
+          }
+        }
+      }
+
+      return { l, idx }
+    }
+    return {
+      p,
+      l,
+      i: idx,
+    }
   }
 
   render() {
+    const ctx = this.ctx
     this.ctx.clearRect(
       this.config.paddingX,
       this.config.paddingY,
@@ -140,9 +204,7 @@ export default class Editor {
 
     data.forEach((paragraphs) => {
       paragraphs.children.forEach((line) =>
-        line.children.forEach((text) =>
-          this.ctx.fillText(text.s, text.x, text.y)
-        )
+        line.children.forEach((el) => el.render(ctx))
       )
     })
   }
@@ -150,5 +212,6 @@ export default class Editor {
   renderText(s: string) {
     this.blocksContainer.push(s)
     this.events.emit(EventType.RENDER)
+    console.log(this.blocksContainer.blocks)
   }
 }
