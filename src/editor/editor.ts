@@ -70,7 +70,7 @@ export default class Editor {
 
   _deleteText() {
     const lastBlock = this.blocksContainer.lastBlock
-    if (lastBlock.texts.length > 0) {
+    if (lastBlock.content.length > 0) {
       lastBlock.delete()
     } else {
       this.blocksContainer.deleteLast()

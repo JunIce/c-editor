@@ -12,11 +12,12 @@ export class Cursor extends Base {
   }
 
   input!: HTMLTextAreaElement | null
+  composing: boolean
   mockCursor!: HTMLDivElement | null
 
   constructor(options: Editor) {
     super(options)
-
+    this.composing = false
     this.location = {
       x: 0,
       y: 0,
@@ -48,6 +49,17 @@ export class Cursor extends Base {
         handleKeyboardEvent.call(null, e, this.editor)
       )
       addEventListener(textarea, "input", this._inputEvent.bind(this))
+      addEventListener(
+        textarea,
+        "compositionstart",
+        this._compositionstart.bind(this)
+      )
+      addEventListener(
+        textarea,
+        "compositionend",
+        this._compositionend.bind(this)
+      )
+
       this.container.appendChild(textarea)
       this.input = textarea
     }
@@ -61,13 +73,20 @@ export class Cursor extends Base {
     this.mockCursor?.remove()
   }
 
+  _compositionstart() {
+    this.composing = true
+  }
+
+  _compositionend() {
+    this.composing = false
+  }
+
   _inputEvent(e: InputEvent) {
     const { data } = e
     const lastBlock = this.editor.blocksContainer.lastBlock
-    data?.split("").forEach((char) => {
-      const text = new Text(char, this.editor.ctx)
-      lastBlock.push(text)
-    })
-    this.editor.events.emit(EventType.RENDER)
+    if (this.composing === false) {
+      lastBlock.content += data
+      this.editor.events.emit(EventType.RENDER)
+    }
   }
 }

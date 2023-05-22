@@ -31,8 +31,11 @@ export interface RenderText {
 
 export interface ParagraphCtx {
   type: "paragraph"
+  content: string
+  height: number
   children: LineCtx[]
   push: (line: LineCtx) => void
+  delete: () => void
 }
 
 export interface LineCtx {
@@ -41,12 +44,17 @@ export interface LineCtx {
   push: (text: RenderText) => void
 }
 
-export function createParagraph() {
+export function createParagraph(content?: string) {
   const paragraph: ParagraphCtx = {
     type: "paragraph",
+    content: content || "",
+    height: 0,
     children: [],
     push: (line: LineCtx) => {
       paragraph.children.push(line)
+    },
+    delete: () => {
+      paragraph.content = paragraph.content.slice(0, -1)
     },
   }
 

@@ -1,6 +1,5 @@
 import Editor from "../editor"
 import Base from "./Base"
-import { BlockContext, createBlockContext } from "./Block"
 import { ParagraphCtx, createLine, createParagraph } from "./CanvasCtx"
 import Text from "./Text"
 
@@ -15,7 +14,7 @@ export interface RenderText {
 }
 
 export default class BlockContainer extends Base {
-  blocks: BlockContext[]
+  blocks: ParagraphCtx[]
 
   constructor(parent: Editor) {
     super(parent)
@@ -23,20 +22,13 @@ export default class BlockContainer extends Base {
   }
 
   addParagraph() {
-    this.blocks.push(createBlockContext())
+    this.blocks.push(createParagraph())
   }
 
   push(data: string) {
-    let currentBlock = createBlockContext()
-    this.blocks.push(currentBlock)
-    ;(data || "").split("").forEach((char) => {
-      if (/\n/.test(char)) {
-        currentBlock = createBlockContext()
-        this.blocks.push(currentBlock)
-      } else {
-        const text = new Text(char, this.ctx)
-        currentBlock.push(text)
-      }
+    ;(data || "").split("\n").forEach((str) => {
+      const paragraph = createParagraph(str)
+      this.blocks.push(paragraph)
     })
   }
 
@@ -45,18 +37,18 @@ export default class BlockContainer extends Base {
   }
 
   get renderBlocks(): ParagraphCtx[] {
-    const renderData: ParagraphCtx[] = []
-
     const ctxRenderWidth = this.config.width - 2 * this.config.paddingX
     let currentWidth = 0
     let currentHeight = this.config.paddingY
 
     for (let i = 0; i < this.blocks.length; i++) {
-      const block = this.blocks[i]
-      const texts = block.texts
-      const paragraph = createParagraph()
-      renderData.push(paragraph)
+      const paragraph = this.blocks[i]
 
+      const texts = paragraph.content
+        .split("")
+        .map((char) => new Text(char, this.ctx))
+
+      if (texts.length === 0) continue
       let line = 0
       const firstText = texts[0] || 26
 
@@ -66,7 +58,7 @@ export default class BlockContainer extends Base {
       let blockHeight = 0
 
       let lineCtx = createLine()
-      paragraph.push(lineCtx)
+      paragraph.children[line] = lineCtx
 
       for (let j = 0; j < texts.length; j++) {
         const text = texts[j]
@@ -91,20 +83,20 @@ export default class BlockContainer extends Base {
         } else {
           line++
           lineCtx = createLine()
-          paragraph.push(lineCtx)
+          paragraph.children[line] = lineCtx
           blockHeight += maxHeight
           currentWidth = 0
         }
       }
-      block.height = blockHeight
-      currentHeight += block.height
+      paragraph.height = blockHeight
+      currentHeight += paragraph.height
       currentWidth = 0
     }
 
-    return renderData
+    return this.blocks
   }
 
-  get lastBlock(): BlockContext {
+  get lastBlock(): ParagraphCtx {
     return this.blocks[this.blocks.length - 1]
   }
 }
