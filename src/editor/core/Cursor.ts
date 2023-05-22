@@ -3,10 +3,13 @@ import { addEventListener } from "../utils"
 import Base from "./Base"
 import { EventType } from "./EventManager"
 import { handleKeyboardEvent } from "./KeyboardEvent"
-import Text from "./Text"
 
 export class Cursor extends Base {
   location: {
+    p: number // paragraph index
+    l: number // line index
+    i: number // index of text
+
     x: number
     y: number
   }
@@ -19,6 +22,10 @@ export class Cursor extends Base {
     super(options)
     this.composing = false
     this.location = {
+      p: 0,
+      l: 0,
+      i: 0,
+
       x: 0,
       y: 0,
     }

@@ -1,6 +1,11 @@
 import Editor from "../editor"
 import Base from "./Base"
-import { ParagraphCtx, createLine, createParagraph } from "./CanvasCtx"
+import {
+  ParagraphCtx,
+  createLine,
+  createParagraph,
+  createRenderText,
+} from "./CanvasCtx"
 import Text from "./Text"
 
 export interface RenderText {
@@ -69,15 +74,14 @@ export default class BlockContainer extends Base {
             blockHeight = maxHeight
           }
 
-          lineCtx.push({
-            blockIndex: i,
-            textIndex: j,
-            s: text.char,
-            textHeight: maxHeight,
-            x: Math.ceil(this.config.paddingX + currentWidth),
-            y: Math.ceil(currentHeight + blockHeight),
-            metrics: text.metrics,
-          })
+          lineCtx.push(
+            createRenderText({
+              value: text.char,
+              x: Math.ceil(this.config.paddingX + currentWidth),
+              y: Math.ceil(currentHeight + blockHeight),
+              metrics: text.metrics,
+            })
+          )
 
           currentWidth += text.metrics.width
         } else {

@@ -40,8 +40,8 @@ export interface ParagraphCtx {
 
 export interface LineCtx {
   type: "line"
-  children: RenderText[]
-  push: (text: RenderText) => void
+  children: RenderElement[]
+  push: (text: RenderElement) => void
 }
 
 export function createParagraph(content?: string) {
@@ -65,10 +65,53 @@ export function createLine() {
   const line: LineCtx = {
     type: "line",
     children: [],
-    push: (text: RenderText) => {
+    push: (text: RenderElement) => {
       line.children.push(text)
     },
   }
 
   return line
+}
+
+export interface RenderElement {
+  type: string
+  render: (ctx: CanvasRenderingContext2D) => void
+}
+
+export interface RenderElementText extends RenderElement {
+  value: string
+  metrics?: TextMetrics
+  pos: {
+    x: number
+    y: number
+  }
+}
+
+export function createRenderText({
+  value,
+  x,
+  y,
+  metrics,
+}: {
+  value: string
+  x: number
+  y: number
+  metrics?: TextMetrics
+}) {
+  const el: RenderElementText = {
+    type: "text",
+    value: value,
+    pos: {
+      x,
+      y,
+    },
+    metrics,
+    render: (ctx: CanvasRenderingContext2D) => {
+      ctx.save()
+      ctx.fillText(el.value, el.pos.x, el.pos.y)
+      ctx.restore()
+    },
+  }
+
+  return el
 }
