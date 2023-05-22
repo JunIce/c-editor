@@ -8,6 +8,9 @@ export const handleKeyboardEvent = (event: KeyboardEvent, editor: Editor) => {
   if (keyCode === KeyCode.BACKSPACE) {
     event.preventDefault()
     editor.events.emit(EventType.TEXT_DELETE)
+  } else if (keyCode === KeyCode.ENTER) {
+    event.preventDefault()
+    editor.events.emit(EventType.INSERT_PARAGRAPH)
   } else if (keyCode === KeyCode.ARROW_UP) {
   } else if (keyCode === KeyCode.ARROW_DOWN) {
   } else if (keyCode === KeyCode.ARROW_LEFT) {

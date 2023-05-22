@@ -3,6 +3,7 @@ import Editor from "../editor"
 export enum EventType {
   RENDER = "RENDER",
   TEXT_DELETE = "TEXT_DELETE",
+  INSERT_PARAGRAPH = "INSERT_PARAGRAPH",
 }
 
 export class EventManager {

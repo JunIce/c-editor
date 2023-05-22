@@ -22,6 +22,10 @@ export default class BlockContainer extends Base {
     this.blocks = []
   }
 
+  addParagraph() {
+    this.blocks.push(createBlockContext())
+  }
+
   push(data: string) {
     let currentBlock = createBlockContext()
     this.blocks.push(currentBlock)

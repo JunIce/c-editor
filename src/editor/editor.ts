@@ -61,6 +61,10 @@ export default class Editor {
   _bindEvents() {
     this.events.on(EventType.RENDER, this.render.bind(this))
     this.events.on(EventType.TEXT_DELETE, this._deleteText.bind(this))
+    this.events.on(
+      EventType.INSERT_PARAGRAPH,
+      this.blocksContainer.addParagraph.bind(this.blocksContainer)
+    )
     addEventListener(this.canvas, "click", this._drawClick.bind(this), false)
   }
 
@@ -103,7 +107,7 @@ export default class Editor {
         clientY - offsetTop - paddingY
       )
       this.cursor.focus()
-      this.cursor.setCursorPosition(clientX, clientY)
+      this.cursor.setCursorPosition(clientX, clientY + scrollTop)
     } else {
       this.cursor.blur()
     }
@@ -112,17 +116,17 @@ export default class Editor {
   _computedPosition(x: number, y: number) {
     const blocks = this.blocksContainer.renderBlocks
 
-    parent: for (let i = 0; i < blocks.length; i++) {
-      let texts = blocks[i]
-      for (let j = 0; j < texts.length; j++) {
-        if (texts[j].y > y && texts[j].x > x) {
-          console.log(i, j, texts[j])
-          break parent
-        } else {
-          continue
-        }
-      }
-    }
+    // parent: for (let i = 0; i < blocks.length; i++) {
+    //   let texts = blocks[i]
+    //   for (let j = 0; j < texts.length; j++) {
+    //     if (texts[j].y > y && texts[j].x > x) {
+    //       console.log(i, j, texts[j])
+    //       break parent
+    //     } else {
+    //       continue
+    //     }
+    //   }
+    // }
   }
 
   render() {
@@ -134,8 +138,12 @@ export default class Editor {
     )
     const data = this.blocksContainer.renderBlocks
 
-    data.forEach((texts) => {
-      texts.forEach((text) => this.ctx.fillText(text.s, text.x, text.y))
+    data.forEach((paragraphs) => {
+      paragraphs.children.forEach((line) =>
+        line.children.forEach((text) =>
+          this.ctx.fillText(text.s, text.x, text.y)
+        )
+      )
     })
   }
 
