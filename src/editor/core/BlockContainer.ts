@@ -1,6 +1,7 @@
 import Editor from "../editor"
 import Base from "./Base"
 import { BlockContext, createBlockContext } from "./Block"
+import { ParagraphCtx, createLine, createParagraph } from "./CanvasCtx"
 import Text from "./Text"
 
 export interface RenderText {
@@ -39,8 +40,8 @@ export default class BlockContainer extends Base {
     this.blocks.pop()
   }
 
-  get renderBlocks(): RenderText[][] {
-    const renderData: RenderText[][] = []
+  get renderBlocks(): ParagraphCtx[] {
+    const renderData: ParagraphCtx[] = []
 
     const ctxRenderWidth = this.config.width - 2 * this.config.paddingX
     let currentWidth = 0
@@ -49,7 +50,8 @@ export default class BlockContainer extends Base {
     for (let i = 0; i < this.blocks.length; i++) {
       const block = this.blocks[i]
       const texts = block.texts
-      renderData[i] = []
+      const paragraph = createParagraph()
+      renderData.push(paragraph)
 
       let line = 0
       const firstText = texts[0] || 26
@@ -58,6 +60,10 @@ export default class BlockContainer extends Base {
         firstText.metrics.fontBoundingBoxAscent +
         firstText.metrics.fontBoundingBoxDescent
       let blockHeight = 0
+
+      let lineCtx = createLine()
+      paragraph.push(lineCtx)
+
       for (let j = 0; j < texts.length; j++) {
         const text = texts[j]
 
@@ -67,7 +73,7 @@ export default class BlockContainer extends Base {
             blockHeight = maxHeight
           }
 
-          renderData[i].push({
+          lineCtx.push({
             blockIndex: i,
             textIndex: j,
             s: text.char,
@@ -80,6 +86,8 @@ export default class BlockContainer extends Base {
           currentWidth += text.metrics.width
         } else {
           line++
+          lineCtx = createLine()
+          paragraph.push(lineCtx)
           blockHeight += maxHeight
           currentWidth = 0
         }
