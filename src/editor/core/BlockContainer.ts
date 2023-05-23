@@ -104,6 +104,18 @@ export default class BlockContainer extends Base {
     return this.blocks[this.blocks.length - 1]
   }
 
+  currentBlock() {
+    return this.blocks[this.editor.cursor.location.p]
+  }
+
+  getBlockByIndex(index: number) {
+    return this.blocks[index]
+  }
+
+  deleteBlock(index: number) {
+    this.blocks.splice(index, 1)
+  }
+
   computedPositionElementByXY(x: number, y: number) {
     const blocks = this.blocks
 

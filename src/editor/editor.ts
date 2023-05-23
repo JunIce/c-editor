@@ -75,10 +75,30 @@ export default class Editor {
   }
 
   _deleteText() {
-    const lastBlock = this.blocksContainer.lastBlock
-    if (lastBlock.content.length > 0) {
-      lastBlock.delete()
-    } else {
+    const currentBlock = this.blocksContainer.currentBlock()
+    // cursor > 0
+    if (this.cursor.location.i > 0) {
+      currentBlock.delete(this.cursor.location.i)
+      this.cursor.location.i -= 1
+      this.cursor.move()
+    } else if (this.cursor.location.i == 0 && currentBlock.content.length > 0) {
+      // not last paragraph
+      if (this.cursor.location.p > 0) {
+        //merge to before
+        const beforeBlock = this.blocksContainer.getBlockByIndex(
+          this.cursor.location.p - 1
+        )
+
+        beforeBlock.content += currentBlock.content
+
+        const lastCursor = beforeBlock.lastCursorPosition()
+        this.blocksContainer.deleteBlock(this.cursor.location.p)
+
+        this.cursor.location.p -= 1
+        this.cursor.location.l = lastCursor.l
+        this.cursor.location.i = lastCursor.i
+        this.cursor.move()
+      }
       this.blocksContainer.deleteLast()
     }
     this.events.emit(EventType.RENDER)

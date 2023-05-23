@@ -1,5 +1,6 @@
 import Editor from "../editor"
 import { computedTextMetries } from "../utils"
+import { PositionIdx } from "./Cursor"
 
 export function createCanvasCtx({
   width,
@@ -39,8 +40,9 @@ export interface ParagraphCtx {
   height: number
   children: LineCtx[]
   push: (line: LineCtx) => void
-  delete: () => void
+  delete: (from?: number) => void
   positionIn: ({ x, y }: MouseXY) => number[] | null
+  lastCursorPosition: () => Pick<PositionIdx, "i" | "l">
 }
 
 interface MouseXY {
@@ -69,8 +71,20 @@ export function createParagraph(editor: Editor, content?: string) {
       line.editor = paragraph.editor
       paragraph.children.push(line)
     },
-    delete: () => {
-      paragraph.content = paragraph.content.slice(0, -1)
+    delete: (from?: number) => {
+      if (from) {
+        paragraph.content =
+          paragraph.content.slice(0, from) + paragraph.content.slice(from + 1)
+      } else {
+        paragraph.content = paragraph.content.slice(0, -1)
+      }
+    },
+    lastCursorPosition: () => {
+      return {
+        l: paragraph.children.length - 1,
+        i:
+          paragraph.children[paragraph.children.length - 1].children.length - 1,
+      }
     },
     positionIn: ({ x, y }: MouseXY) => {
       const lines = paragraph.children
