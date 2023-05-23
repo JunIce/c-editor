@@ -6,16 +6,23 @@ export const handleKeyboardEvent = (event: KeyboardEvent, editor: Editor) => {
   const keyCode = event.keyCode
   if (editor.cursor.composing) return
 
-  if (keyCode === KeyCode.BACKSPACE) {
-    event.preventDefault()
-    editor.events.emit(EventType.TEXT_DELETE)
-  } else if (keyCode === KeyCode.ENTER) {
-    event.preventDefault()
-    editor.events.emit(EventType.INSERT_PARAGRAPH)
-  } else if (keyCode === KeyCode.ARROW_UP) {
-  } else if (keyCode === KeyCode.ARROW_DOWN) {
-  } else if (keyCode === KeyCode.ARROW_LEFT) {
-  } else if (keyCode === KeyCode.ARROW_RIGHT) {
+  switch (keyCode) {
+    case KeyCode.BACKSPACE:
+      event.preventDefault()
+      editor.events.emit(EventType.TEXT_DELETE)
+      break
+
+    case KeyCode.ENTER:
+      event.preventDefault()
+      editor.events.emit(EventType.INSERT_PARAGRAPH)
+      break
+
+    case KeyCode.ARROW_DOWN:
+    case KeyCode.ARROW_UP:
+    case KeyCode.ARROW_LEFT:
+    case KeyCode.ARROW_RIGHT:
+      event.preventDefault()
+      editor.events.emit(EventType.DIRECTION_KEY, keyCode)
+      break
   }
-  // console.log(event)
 }

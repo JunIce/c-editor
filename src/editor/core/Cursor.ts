@@ -3,6 +3,7 @@ import { addEventListener, insertStrFromIdx } from "../utils"
 import Base from "./Base"
 import { EventType } from "./EventManager"
 import { handleKeyboardEvent } from "./KeyboardEvent"
+import { KeyCode, KeyCodeEnum } from "./enums/keycode"
 
 export interface PositionIdx {
   p: number
@@ -55,6 +56,24 @@ export class Cursor extends Base {
   setPositionXY(result: { x: number; y: number }) {
     this.location.x = result.x
     this.location.y = result.y
+  }
+
+  movePosition(keyCode: KeyCodeEnum) {
+    if (keyCode === KeyCode.ARROW_LEFT) {
+      this.location.i -= 1
+    } else if (keyCode === KeyCode.ARROW_RIGHT) {
+      this.location.i += 1
+    }
+
+    // this.editor.events.emit(EventType.MOVE_CURSOR)
+    this.move()
+  }
+
+  move() {
+    const { x, y } = this.editor._computedTargetCursorPosition(this.location)
+    this.setPositionXY({ x, y })
+    this.focus()
+    this.setCursorPosition()
   }
 
   setCursorPosition() {

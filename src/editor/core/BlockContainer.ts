@@ -103,4 +103,35 @@ export default class BlockContainer extends Base {
   get lastBlock(): ParagraphCtx {
     return this.blocks[this.blocks.length - 1]
   }
+
+  computedPositionElementByXY(x: number, y: number) {
+    const blocks = this.blocks
+
+    // position p
+    let p = 0
+    let l = 0
+    let idx = 0
+    let preHeight = this.config.paddingY
+    for (; p < blocks.length; p++) {
+      if (y < preHeight + blocks[p].height) {
+        const position = blocks[p].positionIn({ x, y })
+        if (position !== null) {
+          let [line, textIndex] = position
+          l = line
+          idx = textIndex
+          break
+        } else {
+          continue
+        }
+      } else {
+        preHeight += blocks[p].height
+      }
+    }
+
+    return {
+      p,
+      l,
+      i: idx,
+    }
+  }
 }

@@ -7,3 +7,9 @@ export const enum KeyCode {
   ARROW_RIGHT = 39,
   ARROW_DOWN = 40,
 }
+
+type NumberValues<T> = {
+  [K in keyof T]: T[K] extends number ? T[K] : never
+}[keyof T]
+
+export type KeyCodeEnum = NumberValues<typeof KeyCode>

@@ -67,6 +67,10 @@ export default class Editor {
       EventType.INSERT_PARAGRAPH,
       this.blocksContainer.addParagraph.bind(this.blocksContainer)
     )
+    this.events.on(
+      EventType.DIRECTION_KEY,
+      this.cursor.movePosition.bind(this.cursor)
+    )
     addEventListener(this.canvas, "click", this._drawClick.bind(this), false)
   }
 
@@ -104,16 +108,12 @@ export default class Editor {
       clientX <= clientWidth + offsetLeft - paddingX &&
       clientY + scrollTop <= clientHeight + offsetTop - paddingY
     ) {
-      const position = this._computedPositionElementByXY(
+      const position = this.blocksContainer.computedPositionElementByXY(
         clientX - offsetLeft,
         Math.ceil(clientY + scrollTop - offsetTop)
       )
       this.cursor.setPosition(position)
-
-      const { x, y } = this._computedTargetCursorPosition(position)
-      this.cursor.setPositionXY({ x, y })
-      this.cursor.focus()
-      this.cursor.setCursorPosition()
+      this.cursor.move()
     } else {
       this.cursor.blur()
     }
@@ -149,37 +149,6 @@ export default class Editor {
     return {
       x,
       y,
-    }
-  }
-
-  _computedPositionElementByXY(x: number, y: number) {
-    const blocks = this.blocksContainer.blocks
-
-    // position p
-    let p = 0
-    let l = 0
-    let idx = 0
-    let preHeight = this.config.paddingY
-    for (; p < blocks.length; p++) {
-      if (y < preHeight + blocks[p].height) {
-        const position = blocks[p].positionIn({ x, y })
-        if (position !== null) {
-          let [line, textIndex] = position
-          l = line
-          idx = textIndex
-          break
-        } else {
-          continue
-        }
-      } else {
-        preHeight += blocks[p].height
-      }
-    }
-
-    return {
-      p,
-      l,
-      i: idx,
     }
   }
 

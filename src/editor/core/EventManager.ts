@@ -4,6 +4,8 @@ export enum EventType {
   RENDER = "RENDER",
   TEXT_DELETE = "TEXT_DELETE",
   INSERT_PARAGRAPH = "INSERT_PARAGRAPH",
+  DIRECTION_KEY = "DIRECTION_KEY",
+  MOVE_CURSOR = "MOVE_CURSOR",
 }
 
 export class EventManager {
@@ -19,7 +21,7 @@ export class EventManager {
     this.eventMap[eventName].push(handler)
   }
 
-  emit(eventName: string) {
-    this.eventMap[eventName].forEach((f: Function) => f(this.editor))
+  emit(eventName: string, ...args: any[]): void {
+    this.eventMap[eventName].forEach((f: Function) => f.call(null, ...args))
   }
 }
