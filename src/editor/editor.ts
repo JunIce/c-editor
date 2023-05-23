@@ -56,7 +56,7 @@ export default class Editor {
   }
 
   init() {
-    this.drawBorder()
+    // this.drawBorder()
     this._bindEvents()
   }
 
@@ -125,14 +125,25 @@ export default class Editor {
     let x = offsetLeft
     let y = offsetTop
 
-    const element = this.blocksContainer.blocks[result.p]?.children[result.l]
-      ?.children[result.i] as RenderElementText
+    if (result.i >= 0) {
+      const element = this.blocksContainer.blocks[result.p]?.children[result.l]
+        ?.children[result.i] as RenderElementText
 
-    if (element) {
-      const { rightTop } = computedTextMetries(element)
+      if (element) {
+        const { rightTop } = computedTextMetries(element)
 
-      x += rightTop[0]
-      y += rightTop[1]
+        x += rightTop[0]
+        y += rightTop[1]
+      }
+    } else {
+      const first = this.blocksContainer.blocks[result.p]?.children[result.l]
+        ?.children[0] as RenderElementText
+      if (first) {
+        const { leftTop } = computedTextMetries(first)
+
+        x += leftTop[0]
+        y += leftTop[1]
+      }
     }
 
     return {
@@ -146,13 +157,13 @@ export default class Editor {
 
     // position p
     let p = 0
-    let l = -1
-    let idx = -1
+    let l = 0
+    let idx = 0
     let preHeight = this.config.paddingY
     for (; p < blocks.length; p++) {
       if (y < preHeight + blocks[p].height) {
         const position = blocks[p].positionIn({ x, y })
-        if (position) {
+        if (position !== null) {
           let [line, textIndex] = position
           l = line
           idx = textIndex

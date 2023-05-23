@@ -80,7 +80,7 @@ export function createParagraph(editor: Editor, content?: string) {
 
       for (let i = 0; i < lines.length; i++) {
         const lineTextIndex = lines[i].positionIn({ x, y })
-        if (lineTextIndex) {
+        if (lineTextIndex !== null) {
           lineIdx = i
           textIndex = lineTextIndex
           break
@@ -111,6 +111,8 @@ export function createLine() {
         const text = texts[i] as RenderElementText
         const { leftTop, leftBottom, rightTop } = computedTextMetries(text)
 
+        const { width } = text.metrics!
+        const middleWidth = width / 2
         if (
           x >= leftTop[0] &&
           x <= rightTop[0] &&
@@ -118,11 +120,16 @@ export function createLine() {
           y <= leftBottom[1]
         ) {
           idx = i
+          // if click the middle before the text , the idx will be the sblings
+          if (x < leftTop[0] + middleWidth) {
+            idx -= 1
+          }
+
           break
         }
       }
 
-      if (idx > -1) return idx
+      if (idx > -2) return idx
       return null
     },
   }
