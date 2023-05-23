@@ -1,3 +1,6 @@
+import Editor from "../editor"
+import { computedTextMetries } from "../utils"
+
 export function createCanvasCtx({
   width,
   height,
@@ -31,30 +34,61 @@ export interface RenderText {
 
 export interface ParagraphCtx {
   type: "paragraph"
+  editor: Editor
   content: string
   height: number
   children: LineCtx[]
   push: (line: LineCtx) => void
   delete: () => void
+  positionIn: ({ x, y }: MouseXY) => number[] | null
+}
+
+interface MouseXY {
+  x: number
+  y: number
 }
 
 export interface LineCtx {
   type: "line"
+  parent?: ParagraphCtx
+  editor?: Editor
   children: RenderElement[]
   push: (text: RenderElement) => void
+  positionIn: ({ x, y }: MouseXY) => null | number
 }
 
-export function createParagraph(content?: string) {
+export function createParagraph(editor: Editor, content?: string) {
   const paragraph: ParagraphCtx = {
     type: "paragraph",
     content: content || "",
     height: 0,
+    editor,
     children: [],
     push: (line: LineCtx) => {
+      line.parent = paragraph
+      line.editor = paragraph.editor
       paragraph.children.push(line)
     },
     delete: () => {
       paragraph.content = paragraph.content.slice(0, -1)
+    },
+    positionIn: ({ x, y }: MouseXY) => {
+      const lines = paragraph.children
+
+      let textIndex = -1
+      let lineIdx = -1
+
+      for (let i = 0; i < lines.length; i++) {
+        const lineTextIndex = lines[i].positionIn({ x, y })
+        if (lineTextIndex) {
+          lineIdx = i
+          textIndex = lineTextIndex
+          break
+        }
+      }
+
+      if (lineIdx > -1) return [lineIdx, textIndex]
+      return null
     },
   }
 
@@ -67,6 +101,29 @@ export function createLine() {
     children: [],
     push: (text: RenderElement) => {
       line.children.push(text)
+    },
+    positionIn: ({ x, y }: MouseXY) => {
+      const texts = line.children
+
+      let idx = -1
+
+      for (let i = 0; i < texts.length; i++) {
+        const text = texts[i] as RenderElementText
+        const { leftTop, leftBottom, rightTop } = computedTextMetries(text)
+
+        if (
+          x >= leftTop[0] &&
+          x <= rightTop[0] &&
+          y >= leftTop[1] &&
+          y <= leftBottom[1]
+        ) {
+          idx = i
+          break
+        }
+      }
+
+      if (idx > -1) return idx
+      return null
     },
   }
 

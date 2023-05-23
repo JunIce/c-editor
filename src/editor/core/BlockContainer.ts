@@ -27,12 +27,12 @@ export default class BlockContainer extends Base {
   }
 
   addParagraph() {
-    this.blocks.push(createParagraph())
+    this.blocks.push(createParagraph(this.editor))
   }
 
   push(data: string) {
     ;(data || "").split("\n").forEach((str) => {
-      const paragraph = createParagraph(str)
+      const paragraph = createParagraph(this.editor, str)
       this.blocks.push(paragraph)
     })
   }

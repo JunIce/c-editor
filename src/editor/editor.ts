@@ -151,40 +151,20 @@ export default class Editor {
     let preHeight = this.config.paddingY
     for (; p < blocks.length; p++) {
       if (y < preHeight + blocks[p].height) {
-        let { l: line, idx: i } = position(blocks[p].children)
-        l = line
-        idx = i
-        break
+        const position = blocks[p].positionIn({ x, y })
+        if (position) {
+          let [line, textIndex] = position
+          l = line
+          idx = textIndex
+          break
+        } else {
+          continue
+        }
       } else {
         preHeight += blocks[p].height
       }
     }
 
-    function position(lines: LineCtx[]) {
-      let l = 0
-      let idx = 0
-
-      line: for (; l < lines.length; l++) {
-        const texts = lines[l].children
-
-        for (let i = 0; i < texts.length; i++) {
-          const text = texts[i] as RenderElementText
-          const { leftTop, leftBottom, rightTop } = computedTextMetries(text)
-
-          if (
-            x >= leftTop[0] &&
-            x <= rightTop[0] &&
-            y >= leftTop[1] &&
-            y <= leftBottom[1]
-          ) {
-            idx = i
-            break line
-          }
-        }
-      }
-
-      return { l, idx }
-    }
     return {
       p,
       l,
