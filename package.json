@@ -1,8 +1,9 @@
 {
 	"scripts": {
-		"dev": "vite"
+		"dev": "vite --port 3322"
 	},
 	"devDependencies": {
+		"@types/node": "^20.2.3",
 		"vite": "^4.3.5"
 	}
 }

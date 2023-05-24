@@ -1,10 +1,8 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite"
 
-
-
-export default defineConfig({
-    server: {
-        port: 3020
-    }
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd())
+  return {
+    server: {},
+  }
 })
-
