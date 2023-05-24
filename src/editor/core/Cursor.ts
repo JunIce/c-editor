@@ -142,6 +142,16 @@ export class Cursor extends Base {
         strIdx,
         data || ""
       )
+      if (strIdx < paragraph.children[this.location.l].children.length - 1) {
+        this.location.i += 1
+      } else if (
+        strIdx ==
+        paragraph.children[this.location.l].children.length - 1
+      ) {
+        this.location.i = -1
+        this.location.l += 1
+      }
+      this.move()
       this.editor.events.emit(EventType.RENDER)
     }
   }
