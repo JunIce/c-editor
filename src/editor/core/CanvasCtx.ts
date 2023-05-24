@@ -41,8 +41,10 @@ export interface ParagraphCtx {
   children: LineCtx[]
   push: (line: LineCtx) => void
   delete: (from?: number) => void
+  deleteLine: (from: number) => void
   positionIn: ({ x, y }: MouseXY) => number[] | null
   lastCursorPosition: () => Pick<PositionIdx, "i" | "l">
+  posMatrix: number[][]
 }
 
 interface MouseXY {
@@ -66,10 +68,14 @@ export function createParagraph(editor: Editor, content?: string) {
     height: 0,
     editor,
     children: [],
+    posMatrix: [],
     push: (line: LineCtx) => {
       line.parent = paragraph
       line.editor = paragraph.editor
       paragraph.children.push(line)
+    },
+    deleteLine: (index: number) => {
+      paragraph.children.splice(index, 1)
     },
     delete: (from?: number) => {
       if (from) {
@@ -119,7 +125,7 @@ export function createLine() {
     positionIn: ({ x, y }: MouseXY) => {
       const texts = line.children
 
-      let idx = -1
+      let idx: number | null = null
 
       for (let i = 0; i < texts.length; i++) {
         const text = texts[i] as RenderElementText
@@ -143,8 +149,7 @@ export function createLine() {
         }
       }
 
-      if (idx > -2) return idx
-      return null
+      return idx
     },
   }
 

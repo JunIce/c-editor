@@ -78,12 +78,25 @@ export default class Editor {
     const currentBlock = this.blocksContainer.currentBlock()
     // cursor > 0
     if (this.cursor.location.i > 0) {
-      currentBlock.delete(this.cursor.location.i)
+      let idx = this.cursor.location.i
+      let l = this.cursor.location.l - 1
+      while (l >= 0) {
+        idx += currentBlock.children[l].children.length
+        l--
+      }
+      currentBlock.delete(idx)
       this.cursor.location.i -= 1
       this.cursor.move()
     } else if (this.cursor.location.i == 0 && currentBlock.content.length > 0) {
+      if (this.cursor.location.l > 0) {
+        this.cursor.location.l -= 1
+        this.cursor.location.i =
+          currentBlock.children[this.cursor.location.l].children.length
+        this.cursor.move()
+        currentBlock.deleteLine(this.cursor.location.l + 1)
+      }
       // not last paragraph
-      if (this.cursor.location.p > 0) {
+      else if (this.cursor.location.p > 0) {
         //merge to before
         const beforeBlock = this.blocksContainer.getBlockByIndex(
           this.cursor.location.p - 1
@@ -98,8 +111,8 @@ export default class Editor {
         this.cursor.location.l = lastCursor.l
         this.cursor.location.i = lastCursor.i
         this.cursor.move()
+        this.blocksContainer.deleteLast()
       }
-      this.blocksContainer.deleteLast()
     }
     this.events.emit(EventType.RENDER)
   }
