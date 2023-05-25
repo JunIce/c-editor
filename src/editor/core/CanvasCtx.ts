@@ -192,7 +192,7 @@ export function createRenderText({
     render: (ctx: CanvasRenderingContext2D) => {
       ctx.save()
       ctx.fillStyle = "#000"
-      ctx.font = "normal 16px Aria"
+      ctx.font = "16px 微软雅黑"
       ctx.fillText(el.value, el.pos.x, el.pos.y)
       ctx.restore()
     },

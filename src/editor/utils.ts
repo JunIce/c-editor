@@ -25,10 +25,13 @@ export const frameRender = (fn: any) => {
 }
 
 export const computedTextMetries = (text: RenderElementText) => {
+  const fontWidth =
+    text.metrics!.actualBoundingBoxLeft + text.metrics!.actualBoundingBoxRight
   const leftTop = [text.pos.x, text.pos.y - 16]
   const leftBottom = [text.pos.x, text.pos.y]
-  const rightTop = [text.pos.x + text.metrics!.width, text.pos.y - 16]
-  const rightBottom = [text.pos.x + text.metrics!.width, text.pos.y]
+  const rightTop = [text.pos.x + fontWidth, text.pos.y - 16]
+  const rightBottom = [text.pos.x + fontWidth, text.pos.y]
+
   return {
     leftTop,
     leftBottom,

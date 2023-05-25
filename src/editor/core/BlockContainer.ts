@@ -68,7 +68,11 @@ export default class BlockContainer extends Base {
       for (let j = 0; j < texts.length; j++) {
         const text = texts[j]
 
-        if (currentWidth + text.metrics.width < ctxRenderWidth) {
+        const textWidth =
+          text.metrics.actualBoundingBoxLeft +
+          text.metrics.actualBoundingBoxRight
+
+        if (currentWidth + textWidth < ctxRenderWidth) {
           // offset
           if (blockHeight === 0) {
             blockHeight = maxHeight
