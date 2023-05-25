@@ -43,8 +43,9 @@ export interface ParagraphCtx {
   delete: (from?: number) => void
   deleteLine: (from: number) => void
   positionIn: ({ x, y }: MouseXY) => number[] | null
-  lastCursorPosition: () => Pick<PositionIdx, "i" | "l">
+  lastCursorPosition: () => Omit<PositionIdx, "p">
   posMatrix: number[][]
+  getContentStrIndexByCursor: (cursor: Omit<PositionIdx, "p">) => number
 }
 
 interface MouseXY {
@@ -109,6 +110,14 @@ export function createParagraph(editor: Editor, content?: string) {
 
       if (lineIdx > -1) return [lineIdx, textIndex]
       return null
+    },
+    getContentStrIndexByCursor: ({ l, i }) => {
+      const lines = paragraph.children
+      let idx = i
+      while (--l >= 0) {
+        idx += lines[l].children.length
+      }
+      return idx
     },
   }
 

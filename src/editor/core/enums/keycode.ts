@@ -1,6 +1,7 @@
 export const enum KeyCode {
   BACKSPACE = 8,
   ENTER = 13,
+  DELETE = 46,
 
   ARROW_LEFT = 37,
   ARROW_UP = 38,

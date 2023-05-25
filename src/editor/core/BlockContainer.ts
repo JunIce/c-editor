@@ -20,6 +20,7 @@ export interface RenderText {
 
 export default class BlockContainer extends Base {
   blocks: ParagraphCtx[]
+  DEFAULT_BLOCK_HEIGHT = 24
 
   constructor(parent: Editor) {
     super(parent)
@@ -27,7 +28,20 @@ export default class BlockContainer extends Base {
   }
 
   addParagraph() {
-    this.blocks.push(createParagraph(this.editor))
+    const { p } = this.editor.cursor.location
+    const block = createParagraph(this.editor)
+    const currentBlock = this.currentBlock()
+    const idx = currentBlock.getContentStrIndexByCursor(
+      this.editor.cursor.location
+    )
+    block.content = currentBlock.content.slice(idx + 2)
+    currentBlock.content = currentBlock.content.slice(0, idx + 2)
+
+    this.blocks.splice(p + 1, 0, block)
+    this.editor.render()
+    this.editor.cursor.location.p += 1
+    this.editor.cursor.location.l = 0
+    this.editor.cursor.location.i = 0
   }
 
   push(data: string) {
@@ -53,7 +67,10 @@ export default class BlockContainer extends Base {
         .split("")
         .map((char) => new Text(char, this.ctx))
 
-      if (texts.length === 0) continue
+      if (texts.length === 0) {
+        if (paragraph.height) currentHeight += this.DEFAULT_BLOCK_HEIGHT
+        continue
+      }
       let line = 0
       const firstText = texts[0] || 26
 

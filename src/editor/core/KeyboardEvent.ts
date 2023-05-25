@@ -16,6 +16,10 @@ export const handleKeyboardEvent = (event: KeyboardEvent, editor: Editor) => {
       event.preventDefault()
       editor.events.emit(EventType.INSERT_PARAGRAPH)
       break
+    case KeyCode.DELETE:
+      event.preventDefault()
+      editor.events.emit(EventType.INSERT_PARAGRAPH)
+      break
 
     case KeyCode.ARROW_DOWN:
     case KeyCode.ARROW_UP:
