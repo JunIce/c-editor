@@ -65,7 +65,6 @@ export class Cursor extends Base {
       this.location.i += 1
     }
 
-    // this.editor.events.emit(EventType.MOVE_CURSOR)
     this.move()
   }
 
@@ -77,11 +76,14 @@ export class Cursor extends Base {
   }
 
   setCursorPosition() {
-    this.input!.style.top = this.location.y + "px"
-    this.input!.style.left = this.location.x + "px"
+    const offsetX = this.editor.config.paddingX
+    const offsetY = this.editor.config.paddingY
+    this.input!.style.top = this.location.y + offsetY + "px"
+    this.input!.style.left = this.location.x + offsetX + "px"
 
-    this.mockCursor!.style.top = this.location.y + "px"
-    this.mockCursor!.style.left = this.location.x + "px"
+    this.mockCursor!.style.top = this.location.y + offsetY + "px"
+    this.mockCursor!.style.left = this.location.x + offsetX + "px"
+    // this.mockCursor!.style.height = 12 + "px"
   }
 
   focus() {
@@ -151,8 +153,8 @@ export class Cursor extends Base {
         this.location.i = -1
         this.location.l += 1
       }
-      this.move()
       this.editor.events.emit(EventType.RENDER)
+      this.move()
     }
   }
 }

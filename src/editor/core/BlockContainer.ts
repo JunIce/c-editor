@@ -27,6 +27,13 @@ export default class BlockContainer extends Base {
     this.blocks = []
   }
 
+  get createLineElement() {
+    return createLine(this.editor)
+  }
+  get createTextElement() {
+    return createRenderText(this.editor)
+  }
+
   addParagraph() {
     const { p } = this.editor.cursor.location
     const block = createParagraph(this.editor)
@@ -58,7 +65,7 @@ export default class BlockContainer extends Base {
   get renderBlocks(): ParagraphCtx[] {
     const ctxRenderWidth = this.config.width - 2 * this.config.paddingX
     let currentWidth = 0
-    let currentHeight = this.config.paddingY
+    let currentHeight = 0
 
     for (let i = 0; i < this.blocks.length; i++) {
       const paragraph = this.blocks[i]
@@ -79,15 +86,16 @@ export default class BlockContainer extends Base {
         firstText.metrics.fontBoundingBoxDescent
       let blockHeight = 0
 
-      let lineCtx = createLine()
+      let lineCtx = this.createLineElement()
       paragraph.children[line] = lineCtx
 
       for (let j = 0; j < texts.length; j++) {
         const text = texts[j]
 
-        const textWidth =
-          text.metrics.actualBoundingBoxLeft +
-          text.metrics.actualBoundingBoxRight
+        const textWidth = text.metrics.width
+        const textHeight =
+          text.metrics.actualBoundingBoxAscent +
+          text.metrics.actualBoundingBoxDescent
 
         if (currentWidth + textWidth < ctxRenderWidth) {
           // offset
@@ -96,18 +104,20 @@ export default class BlockContainer extends Base {
           }
 
           lineCtx.push(
-            createRenderText({
+            this.createTextElement({
               value: text.char,
-              x: Math.ceil(this.config.paddingX + currentWidth),
+              width: textWidth,
+              height: textHeight,
+              x: Math.ceil(currentWidth),
               y: Math.ceil(currentHeight + blockHeight),
               metrics: text.metrics,
             })
           )
 
-          currentWidth += text.metrics.width
+          currentWidth += textWidth
         } else {
           line++
-          lineCtx = createLine()
+          lineCtx = this.createLineElement()
           paragraph.children[line] = lineCtx
           blockHeight += maxHeight
           currentWidth = 0

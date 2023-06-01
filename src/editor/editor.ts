@@ -3,6 +3,7 @@ import { addEventListener, computedTextMetries } from "./utils"
 import { EventManager, EventType } from "./core/EventManager"
 import { Cursor, PositionIdx } from "./core/Cursor"
 import { LineCtx, RenderElementText, createCanvasCtx } from "./core/CanvasCtx"
+import { Selection } from "./core/Selection"
 
 export interface ConfigProps {
   width: number
@@ -18,6 +19,7 @@ export default class Editor {
   events: EventManager
   dpr: number
   cursor: Cursor
+  selection: Selection
 
   config: ConfigProps = {
     width: 1000,
@@ -34,6 +36,7 @@ export default class Editor {
     this.blocksContainer = new BlockContainer(this)
     this.events = new EventManager(this)
     this.cursor = new Cursor(this)
+    this.selection = new Selection(this)
 
     this.config.width = options.width || 1000
     this.config.height = options.height || 500
@@ -197,7 +200,7 @@ export default class Editor {
 
     data.forEach((paragraphs) => {
       paragraphs.children.forEach((line) =>
-        line.children.forEach((el) => el.render(ctx))
+        line.children.forEach((el) => el.render())
       )
     })
   }
@@ -205,6 +208,6 @@ export default class Editor {
   renderText(s: string) {
     this.blocksContainer.push(s)
     this.events.emit(EventType.RENDER)
-    console.log(this.blocksContainer.blocks)
+    // console.log(this.blocksContainer.blocks)
   }
 }

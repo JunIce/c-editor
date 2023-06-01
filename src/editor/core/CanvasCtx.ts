@@ -124,88 +124,90 @@ export function createParagraph(editor: Editor, content?: string) {
   return paragraph
 }
 
-export function createLine() {
-  const line: LineCtx = {
-    type: "line",
-    children: [],
-    push: (text: RenderElement) => {
-      line.children.push(text)
-    },
-    positionIn: ({ x, y }: MouseXY) => {
-      const texts = line.children
+export function createLine(editor: Editor) {
+  return () => {
+    const line: LineCtx = {
+      type: "line",
+      children: [],
+      push: (text: RenderElement) => {
+        line.children.push(text)
+      },
+      positionIn: ({ x, y }: MouseXY) => {
+        const texts = line.children
+        const offsetX = editor.config.paddingX
+        const offsetY = editor.config.paddingY
 
-      let idx: number | null = null
+        let idx: number | null = null
 
-      for (let i = 0; i < texts.length; i++) {
-        const text = texts[i] as RenderElementText
-        const { leftTop, leftBottom, rightTop } = computedTextMetries(text)
+        for (let i = 0; i < texts.length; i++) {
+          const text = texts[i] as RenderElementText
+          const { leftTop, leftBottom, rightTop } = computedTextMetries(text)
 
-        const { width } = text.metrics!
-        const middleWidth = width / 2
-        if (
-          x >= leftTop[0] &&
-          x <= rightTop[0] &&
-          y >= leftTop[1] &&
-          y <= leftBottom[1]
-        ) {
-          idx = i
-          // if click the middle before the text , the idx will be the sblings
-          if (x < leftTop[0] + middleWidth) {
-            idx -= 1
+          const { width } = text.metrics!
+          const middleWidth = width / 2
+          if (
+            x - offsetX >= leftTop[0] &&
+            x - offsetX <= rightTop[0] &&
+            y - offsetY >= leftTop[1] &&
+            y - offsetY <= leftBottom[1]
+          ) {
+            idx = i
+            // if click the middle before the text , the idx will be the sblings
+            if (x < leftTop[0] + middleWidth) {
+              idx -= 1
+            }
+
+            break
           }
-
-          break
         }
-      }
 
-      return idx
-    },
+        return idx
+      },
+    }
+
+    return line
   }
-
-  return line
 }
 
 export interface RenderElement {
   type: string
-  render: (ctx: CanvasRenderingContext2D) => void
+  render: (x?: number, y?: number) => void
 }
 
 export interface RenderElementText extends RenderElement {
   value: string
   metrics?: TextMetrics
-  pos: {
-    x: number
-    y: number
-  }
-}
-
-export function createRenderText({
-  value,
-  x,
-  y,
-  metrics,
-}: {
-  value: string
+  width: number
+  height: number
   x: number
   y: number
-  metrics?: TextMetrics
-}) {
-  const el: RenderElementText = {
-    type: "text",
-    value: value,
-    pos: {
+}
+
+export const createRenderText = (editor: Editor) => {
+  return ({ value, metrics, width, height, x, y }: any) => {
+    const el = {
+      type: "text",
+      value: value,
+      width,
+      height,
       x,
       y,
-    },
-    metrics,
-    render: (ctx: CanvasRenderingContext2D) => {
-      ctx.save()
-      ctx.fillStyle = "#000"
-      ctx.font = "16px 微软雅黑"
-      ctx.fillText(el.value, el.pos.x, el.pos.y)
-      ctx.restore()
-    },
-  }
+      metrics,
+      render: (x?: number, y?: number) => {
+        const ctx = editor.ctx
 
-  return el
+        ctx.save()
+        ctx.fillStyle = "#000"
+        ctx.font = "16px 微软雅黑"
+        ctx.fillText(
+          el.value,
+          ((x ? x : el.x) || 0) + editor.config.paddingX,
+          ((y ? y : el.y) || 0) + editor.config.paddingY
+        )
+        ctx.restore()
+      },
+    }
+
+    return el
+  }
 }
