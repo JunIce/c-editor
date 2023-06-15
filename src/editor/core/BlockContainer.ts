@@ -143,6 +143,10 @@ export default class BlockContainer extends Base {
     return this.blocks[index]
   }
 
+  getBlockContentLength(pIndex: number, lineIndex: number) {
+    return this.getBlockByIndex(pIndex).children[lineIndex].children.length
+  }
+
   deleteBlock(index: number) {
     this.blocks.splice(index, 1)
   }
@@ -158,15 +162,19 @@ export default class BlockContainer extends Base {
         y < preHeight + blocks[p].height &&
         blocks[p].positionInParagraph({ x, y })
       ) {
-        const position = blocks[p].positionIn({ x, y })
+        const paragraph = blocks[p]
+        const position = paragraph.positionIn({ x, y })
         if (position) {
           let [line, textIndex] = position
           l = line
           idx = textIndex
-          break
         } else {
-          continue
+          l = paragraph.children.length - 1
+          idx =
+            paragraph.children[paragraph.children.length - 1].children.length -
+            1
         }
+        break
       } else {
         preHeight += blocks[p].height
       }

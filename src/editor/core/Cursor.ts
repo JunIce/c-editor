@@ -80,8 +80,35 @@ export class Cursor extends Base {
   movePosition(keyCode: KeyCodeEnum) {
     if (keyCode === KeyCode.ARROW_LEFT) {
       this.location.i -= 1
+
+      // 跳到上一段段尾
+      const prevParagraph = this.editor.blocksContainer.getBlockByIndex(
+        this.location.p - 1
+      )
+      if (prevParagraph && this.location.i < -1) {
+        this.location.p -= 1
+        this.location.l = prevParagraph.children.length - 1
+        this.location.i =
+          prevParagraph.children[this.location.l].children.length - 1
+      }
     } else if (keyCode === KeyCode.ARROW_RIGHT) {
       this.location.i += 1
+      if (
+        this.location.i >=
+        this.editor.blocksContainer.getBlockContentLength(
+          this.location.p,
+          this.location.l
+        )
+      ) {
+        // 如果存在下一段  光标到下一段段首
+        if (this.editor.blocksContainer.getBlockByIndex(this.location.p + 1)) {
+          this.location.i = -1
+          this.location.l = 0
+          this.location.p += 1
+        } else {
+          this.location.i -= 1
+        }
+      }
     }
 
     this.move()

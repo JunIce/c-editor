@@ -1,5 +1,5 @@
 import Editor from "../editor"
-import { calcuateNumber, computedTextMetries } from "../utils"
+import { calcuateNumber, computedTextMetries, logs } from "../utils"
 import { PositionIdx } from "./Cursor"
 import Text from "./Text"
 
@@ -181,9 +181,12 @@ export function createLine(editor: Editor) {
         ] as RenderElementText
 
         line.metrics.leftTop = [first.x, calcuateNumber(first.y - first.height)]
-        line.metrics.rightTop = [last.x, calcuateNumber(last.y - last.height)]
+        line.metrics.rightTop = [
+          last.x + last.width,
+          calcuateNumber(last.y - last.height),
+        ]
         line.metrics.leftBottom = [first.x, first.y]
-        line.metrics.rightBottom = [last.x, last.y]
+        line.metrics.rightBottom = [last.x + last.width, last.y]
 
         if (line.parent) {
           line.parent._updateMetrics()
@@ -202,7 +205,6 @@ export function createLine(editor: Editor) {
           for (let i = 0; i < texts.length; i++) {
             const text = texts[i] as RenderElementText
             const { leftTop, rightBottom } = computedTextMetries(text)
-
             const { width } = text.metrics!
             const middleWidth = width / 2
             if (
