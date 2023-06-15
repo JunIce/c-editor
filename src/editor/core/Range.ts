@@ -1,18 +1,18 @@
 import Editor from "../editor"
-import Base from "./Base"
 
-export class Range extends Base {
+export interface RangeCtx {
+  startNode: any
+  endNode: any
   collapsed: boolean
-  commonAncestorContainer: any
-  endContainer: any
-  endOffset: number | null
-  startContainer: any
-  startOffset: number | null
+}
 
-  constructor(editor: Editor) {
-    super(editor)
-    this.collapsed = false
-    this.endOffset = null
-    this.startOffset = null
+export const createRangeCtx = (editor: Editor) => {
+  return () => {
+    const range: RangeCtx = {
+      startNode: null,
+      endNode: null,
+      collapsed: true,
+    }
+    return range
   }
 }

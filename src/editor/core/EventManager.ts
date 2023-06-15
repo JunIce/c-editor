@@ -1,5 +1,9 @@
 import Editor from "../editor"
 
+export enum NativeEventType {
+  MOUSE_DOWN = "mousedown",
+}
+
 export enum EventType {
   RENDER = "RENDER",
   TEXT_DELETE = "TEXT_DELETE",

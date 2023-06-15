@@ -1,8 +1,8 @@
-import Editor from "../editor"
-import { EventType } from "./EventManager"
-import { KeyCode } from "./enums/keycode"
+import Editor from "../../editor"
+import { EventType } from "../EventManager"
+import { KeyCode } from "../enums/keycode"
 
-export const handleKeyboardEvent = (event: KeyboardEvent, editor: Editor) => {
+export const onKeydown = (editor: Editor) => (event: KeyboardEvent) => {
   const keyCode = event.keyCode
   if (editor.cursor.composing) return
 

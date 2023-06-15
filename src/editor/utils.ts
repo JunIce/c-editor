@@ -41,3 +41,11 @@ export const computedTextMetries = (text: RenderElementText) => {
 export const insertStrFromIdx = (s = "", idx: number, insert = "") => {
   return s.substring(0, idx) + insert + s.substring(idx)
 }
+
+
+export const calcuateNumber = (v: number) => Number(v.toFixed(2))
+
+
+export const logs = (str: any) => console.log(str)
+
+export const randomColor = () => '#' + (Math.random() * 0xFFFFFF << 0).toString(16)

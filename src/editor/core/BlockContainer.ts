@@ -1,4 +1,5 @@
 import Editor from "../editor"
+import { logs } from "../utils"
 import Base from "./Base"
 import {
   ParagraphCtx,
@@ -27,6 +28,10 @@ export default class BlockContainer extends Base {
     this.blocks = []
   }
 
+  get createParagraphElement() {
+    return createParagraph(this.editor)
+  }
+
   get createLineElement() {
     return createLine(this.editor)
   }
@@ -36,7 +41,7 @@ export default class BlockContainer extends Base {
 
   addParagraph() {
     const { p } = this.editor.cursor.location
-    const block = createParagraph(this.editor)
+    const block = this.createParagraphElement()
     const currentBlock = this.currentBlock()
     const idx = currentBlock.getContentStrIndexByCursor(
       this.editor.cursor.location
@@ -53,7 +58,7 @@ export default class BlockContainer extends Base {
 
   push(data: string) {
     ;(data || "").split("\n").forEach((str) => {
-      const paragraph = createParagraph(this.editor, str)
+      const paragraph = this.createParagraphElement(str)
       this.blocks.push(paragraph)
     })
   }
@@ -71,31 +76,25 @@ export default class BlockContainer extends Base {
       const paragraph = this.blocks[i]
 
       const texts = paragraph.content
-        .split("")
-        .map((char) => new Text(char, this.ctx))
 
       if (texts.length === 0) {
         if (paragraph.height) currentHeight += this.DEFAULT_BLOCK_HEIGHT
         continue
       }
       let line = 0
-      const firstText = texts[0] || 26
+      paragraph.emptyLine()
 
-      let maxHeight =
-        firstText.metrics.fontBoundingBoxAscent +
-        firstText.metrics.fontBoundingBoxDescent
+      let maxHeight = 18
       let blockHeight = 0
 
       let lineCtx = this.createLineElement()
-      paragraph.children[line] = lineCtx
+      paragraph.push(lineCtx)
 
       for (let j = 0; j < texts.length; j++) {
         const text = texts[j]
 
-        const textWidth = text.metrics.width
-        const textHeight =
-          text.metrics.actualBoundingBoxAscent +
-          text.metrics.actualBoundingBoxDescent
+        const textWidth = text.width
+        const textHeight = text.height
 
         if (currentWidth + textWidth < ctxRenderWidth) {
           // offset
@@ -118,12 +117,13 @@ export default class BlockContainer extends Base {
         } else {
           line++
           lineCtx = this.createLineElement()
-          paragraph.children[line] = lineCtx
+          paragraph.push(lineCtx)
           blockHeight += maxHeight
           currentWidth = 0
         }
       }
       paragraph.height = blockHeight
+      paragraph.metrics.y = blockHeight
       currentHeight += paragraph.height
       currentWidth = 0
     }
@@ -149,16 +149,17 @@ export default class BlockContainer extends Base {
 
   computedPositionElementByXY(x: number, y: number) {
     const blocks = this.blocks
-
-    // position p
     let p = 0
     let l = 0
     let idx = 0
     let preHeight = this.config.paddingY
     for (; p < blocks.length; p++) {
-      if (y < preHeight + blocks[p].height) {
+      if (
+        y < preHeight + blocks[p].height &&
+        blocks[p].positionInParagraph({ x, y })
+      ) {
         const position = blocks[p].positionIn({ x, y })
-        if (position !== null) {
+        if (position) {
           let [line, textIndex] = position
           l = line
           idx = textIndex

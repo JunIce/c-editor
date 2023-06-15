@@ -1,9 +1,11 @@
 import BlockContainer from "./core/BlockContainer"
-import { addEventListener, computedTextMetries } from "./utils"
-import { EventManager, EventType } from "./core/EventManager"
+import { addEventListener, computedTextMetries, logs, randomColor } from "./utils"
+import { EventManager, EventType, NativeEventType } from "./core/EventManager"
 import { Cursor, PositionIdx } from "./core/Cursor"
-import { LineCtx, RenderElementText, createCanvasCtx } from "./core/CanvasCtx"
+import { LineCtx, ParagraphCtx, RenderElementText, createCanvasCtx } from "./core/CanvasCtx"
 import { Selection } from "./core/Selection"
+import { RangeCtx, createRangeCtx } from "./core/Range"
+import { onMouseDown } from "./core/events/mousedown"
 
 export interface ConfigProps {
   width: number
@@ -50,12 +52,23 @@ export default class Editor {
     this.ctx = this.canvas.getContext("2d")!
   }
 
+  public get rangeCtx() {
+    return createRangeCtx(this)
+  }
+
   public get scrollTop(): number {
     return document.documentElement.scrollTop
   }
 
   public get scrollLeft(): number {
     return document.documentElement.scrollLeft
+  }
+
+  public get renderSize(): { width: number; height: number } {
+    return {
+      width: this.config.width - 2 * this.config.paddingX,
+      height: this.config.height - 2 * this.config.paddingY,
+    }
   }
 
   init() {
@@ -74,11 +87,20 @@ export default class Editor {
       EventType.DIRECTION_KEY,
       this.cursor.movePosition.bind(this.cursor)
     )
-    addEventListener(this.canvas, "click", this._drawClick.bind(this), false)
+
+    addEventListener(
+      this.canvas,
+      NativeEventType.MOUSE_DOWN,
+      onMouseDown(this),
+      false
+    )
+    addEventListener(this.canvas, "mousemove", () => { }, false)
   }
 
   _deleteText() {
     const currentBlock = this.blocksContainer.currentBlock()
+    console.log("", currentBlock)
+
     // cursor > 0
     if (this.cursor.location.i > 0) {
       let idx = this.cursor.location.i
@@ -105,7 +127,11 @@ export default class Editor {
           this.cursor.location.p - 1
         )
 
-        beforeBlock.content += currentBlock.content
+        beforeBlock.content.splice(
+          beforeBlock.content.length - 1,
+          0,
+          ...currentBlock.content
+        )
 
         const lastCursor = beforeBlock.lastCursorPosition()
         this.blocksContainer.deleteBlock(this.cursor.location.p)
@@ -114,7 +140,6 @@ export default class Editor {
         this.cursor.location.l = lastCursor.l
         this.cursor.location.i = lastCursor.i
         this.cursor.move()
-        this.blocksContainer.deleteLast()
       }
     }
     this.events.emit(EventType.RENDER)
@@ -129,30 +154,6 @@ export default class Editor {
       this.config.width - 2 * this.config.paddingX,
       this.config.height - 2 * this.config.paddingY
     )
-  }
-
-  _drawClick(e: MouseEvent) {
-    const { clientX, clientY } = e
-    let { offsetTop, offsetLeft, clientWidth, clientHeight } = this.container
-    const { paddingY, paddingX } = this.config
-
-    const scrollTop = this.scrollTop
-    // 判断是否是点击区域
-    if (
-      clientX >= offsetLeft + paddingX &&
-      clientY + scrollTop >= offsetTop + paddingY &&
-      clientX <= clientWidth + offsetLeft - paddingX &&
-      clientY + scrollTop <= clientHeight + offsetTop - paddingY
-    ) {
-      const position = this.blocksContainer.computedPositionElementByXY(
-        clientX - offsetLeft,
-        Math.ceil(clientY + scrollTop - offsetTop)
-      )
-      this.cursor.setPosition(position)
-      this.cursor.move()
-    } else {
-      this.cursor.blur()
-    }
   }
 
   _computedTargetCursorPosition(result: PositionIdx) {
@@ -190,24 +191,54 @@ export default class Editor {
 
   render() {
     const ctx = this.ctx
-    this.ctx.clearRect(
-      this.config.paddingX,
-      this.config.paddingY,
-      this.config.width - 2 * this.config.paddingX,
-      this.config.height - 2 * this.config.paddingY
+    logs(1)
+    ctx.clearRect(
+      0,
+      0,
+      this.config.width,
+      this.config.height
     )
+
     const data = this.blocksContainer.renderBlocks
 
-    data.forEach((paragraphs) => {
+    data.forEach((paragraphs, idx) => {
       paragraphs.children.forEach((line) =>
-        line.children.forEach((el) => el.render())
+        line.children.forEach((el) => {
+          el.render()
+        })
       )
     })
+  }
+
+  testPoint(x: number, y: number) {
+    const ctx = this.ctx
+    ctx.beginPath()
+    ctx.moveTo(x, y)
+    ctx.arc(x, y, 1, 0, 2 * Math.PI)
+    ctx.fillStyle = "green"
+    ctx.fill()
+    ctx.closePath()
+  }
+
+  drawDect({ metrics: { leftTop, y } }: ParagraphCtx, idx: number) {
+    this.ctx.save()
+    this.ctx.beginPath()
+
+    this.ctx.strokeStyle = randomColor();
+    this.ctx.strokeRect(leftTop[0] + this.config.paddingX, leftTop[1] + this.config.paddingY, this.renderSize.width, y)
+
+    this.ctx.fillStyle = "red"
+    this.ctx.font = "24px 微软雅黑"
+    this.ctx.textBaseline = "top"
+    this.ctx.fillText(idx + '', leftTop[0] + this.config.paddingX, leftTop[1] + this.config.paddingY)
+
+    this.ctx.closePath()
+    this.ctx.restore()
   }
 
   renderText(s: string) {
     this.blocksContainer.push(s)
     this.events.emit(EventType.RENDER)
-    // console.log(this.blocksContainer.blocks)
+    console.info(this.blocksContainer.blocks)
   }
 }
