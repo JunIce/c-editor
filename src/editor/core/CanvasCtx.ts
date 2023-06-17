@@ -30,12 +30,12 @@ export interface ParagraphCtx {
   content: Text[]
   height: number
   children: LineCtx[]
+  renderChildren: any[]
   push: (line: LineCtx) => void
-  delete: (from?: number) => void
+  delete: (from: number) => void
   deleteLine: (from: number) => void
   positionInParagraph: ({ x, y }: MouseXY) => boolean
-  positionIn: ({ x, y }: MouseXY) => number[] | void
-  lastCursorPosition: () => Omit<PositionIdx, "p">
+  positionIn: ({ x, y }: MouseXY) => number | void
   metrics: {
     leftTop: number[]
     x: number
@@ -80,6 +80,7 @@ export function createParagraph(editor: Editor) {
       height: 0,
       editor,
       children: [],
+      renderChildren: [],
       metrics: {
         leftTop: [],
         x: 0,
@@ -98,7 +99,7 @@ export function createParagraph(editor: Editor) {
         paragraph._updateMetrics()
       },
       emptyLine: () => {
-        paragraph.children.length = 0
+        paragraph.renderChildren.length = 0
       },
       deleteLine: (index: number) => {
         paragraph.children.splice(index, 1)
@@ -108,28 +109,19 @@ export function createParagraph(editor: Editor) {
         const { width: renderWidth } = editor.renderSize
         const {
           metrics: { leftTop: firstLeftTop },
-        } = paragraph.children[0]
+        } = paragraph.renderChildren[0]
 
         paragraph.metrics.leftTop = firstLeftTop
         paragraph.metrics.x = renderWidth
       },
-      delete: (from?: number) => {
-        if (from) {
-          paragraph.content.splice(from, 1)
-        } else {
-          paragraph.content = paragraph.content.slice(0, -1)
-        }
-      },
-      lastCursorPosition: () => {
-        return {
-          l: paragraph.children.length - 1,
-          i:
-            paragraph.children[paragraph.children.length - 1].children.length -
-            1,
-        }
+      delete: (from: number) => {
+        paragraph.content.splice(from, 1)
       },
       positionInParagraph: ({ x, y }: MouseXY) => {
-        const { leftTop, x: renderWidth, y: renderHeight } = paragraph.metrics
+        const first = paragraph.renderChildren[0]
+        const { leftTop } = computedTextMetries(first)
+        const renderWidth = editor.renderSize.width
+        const renderHeight = paragraph.height
 
         return (
           x >= leftTop[0] &&
@@ -139,19 +131,15 @@ export function createParagraph(editor: Editor) {
         )
       },
       positionIn: ({ x, y }: MouseXY) => {
-        const lines = paragraph.children
-        for (let i = 0; i < lines.length; i++) {
-          const lineTextIndex = lines[i].positionIn({ x, y })
-          if (lineTextIndex !== undefined) return [i, lineTextIndex]
+        const texts = paragraph.renderChildren
+        for (let i = 0; i < texts.length; i++) {
+          const textIdx = texts[i].positionIn({ x, y })
+          if (textIdx !== undefined) return textIdx === 1 ? i : i - 1
         }
+        return texts.length - 1
       },
-      getContentStrIndexByCursor: ({ l, i }) => {
-        const lines = paragraph.children
-        let idx = i
-        while (--l >= 0) {
-          idx += lines[l].children.length
-        }
-        return idx
+      getContentStrIndexByCursor: ({ i }) => {
+        return i
       },
     }
 
@@ -201,7 +189,7 @@ export function createLine(editor: Editor) {
           y >= leftTop[1] &&
           y <= rightBottom[1]
         ) {
-          const texts = line.children
+          const texts = line.children as RenderElementText[]
           for (let i = 0; i < texts.length; i++) {
             const text = texts[i] as RenderElementText
             const { leftTop, rightBottom } = computedTextMetries(text)
@@ -215,9 +203,9 @@ export function createLine(editor: Editor) {
             ) {
               // if click the middle before the text , the idx will be the sblings
               if (x < leftTop[0] + middleWidth) {
-                return i - 1
+                return texts[i - 1].idx
               }
-              return i
+              return text.idx
             }
           }
         }
@@ -240,10 +228,20 @@ export interface RenderElementText extends RenderElement {
   height: number
   x: number
   y: number
+  idx?: number
+  node: any
 }
 
 export const createRenderText = (editor: Editor) => {
-  return ({ value, metrics, width, height, x, y }: any): RenderElementText => {
+  return ({
+    value,
+    metrics,
+    width,
+    height,
+    x,
+    y,
+    node,
+  }: any): RenderElementText => {
     const el = {
       type: "text",
       value: value,
@@ -251,6 +249,7 @@ export const createRenderText = (editor: Editor) => {
       height,
       x,
       y,
+      node,
       metrics,
       render: () => {
         const ctx = editor.ctx
@@ -268,6 +267,23 @@ export const createRenderText = (editor: Editor) => {
         )
         ctx.closePath()
         ctx.restore()
+      },
+      positionIn: ({ x, y }: MouseXY) => {
+        const text = el
+        const { leftTop, rightBottom } = computedTextMetries(text)
+        const { width } = text.metrics!
+        const middleWidth = width / 2
+        if (
+          x >= leftTop[0] &&
+          x <= rightBottom[0] &&
+          y >= leftTop[1] &&
+          y <= rightBottom[1]
+        ) {
+          if (x < leftTop[0] + middleWidth) {
+            return -1
+          }
+          return 1
+        }
       },
     }
 

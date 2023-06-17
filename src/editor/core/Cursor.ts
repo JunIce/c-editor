@@ -8,14 +8,12 @@ import { onCompositionEnd, onCompositionStart } from "./events/composition"
 
 export interface PositionIdx {
   p: number
-  l: number
   i: number
 }
 
 export class Cursor extends Base {
   location: {
     p: number // paragraph index
-    l: number // line index
     i: number // index of text
 
     x: number
@@ -31,7 +29,6 @@ export class Cursor extends Base {
     this.composing = false
     this.location = {
       p: 0,
-      l: 0,
       i: 0,
 
       x: 0,
@@ -68,7 +65,6 @@ export class Cursor extends Base {
 
   setPosition(result: PositionIdx) {
     this.location.p = result.p
-    this.location.l = result.l
     this.location.i = result.i
   }
 
@@ -87,28 +83,27 @@ export class Cursor extends Base {
       )
       if (prevParagraph && this.location.i < -1) {
         this.location.p -= 1
-        this.location.l = prevParagraph.children.length - 1
-        this.location.i =
-          prevParagraph.children[this.location.l].children.length - 1
+        this.location.i = prevParagraph.content.length - 1
       }
     } else if (keyCode === KeyCode.ARROW_RIGHT) {
       this.location.i += 1
       if (
         this.location.i >=
-        this.editor.blocksContainer.getBlockContentLength(
-          this.location.p,
-          this.location.l
-        )
+        this.editor.blocksContainer.getBlockByIndex(this.location.p).content
+          .length
       ) {
         // 如果存在下一段  光标到下一段段首
         if (this.editor.blocksContainer.getBlockByIndex(this.location.p + 1)) {
           this.location.i = -1
-          this.location.l = 0
           this.location.p += 1
         } else {
           this.location.i -= 1
         }
       }
+    } else if (keyCode === KeyCode.ARROW_UP) {
+      // #todo move up
+    } else if (keyCode === KeyCode.ARROW_DOWN) {
+      // #todo move down
     }
 
     this.move()

@@ -52,7 +52,6 @@ export default class BlockContainer extends Base {
     this.blocks.splice(p + 1, 0, block)
     this.editor.render()
     this.editor.cursor.location.p += 1
-    this.editor.cursor.location.l = 0
     this.editor.cursor.location.i = 0
   }
 
@@ -81,14 +80,10 @@ export default class BlockContainer extends Base {
         if (paragraph.height) currentHeight += this.DEFAULT_BLOCK_HEIGHT
         continue
       }
-      let line = 0
       paragraph.emptyLine()
 
       let maxHeight = 18
       let blockHeight = 0
-
-      let lineCtx = this.createLineElement()
-      paragraph.push(lineCtx)
 
       for (let j = 0; j < texts.length; j++) {
         const text = texts[j]
@@ -96,31 +91,28 @@ export default class BlockContainer extends Base {
         const textWidth = text.width
         const textHeight = text.height
 
-        if (currentWidth + textWidth < ctxRenderWidth) {
-          // offset
-          if (blockHeight === 0) {
-            blockHeight = maxHeight
-          }
-
-          lineCtx.push(
-            this.createTextElement({
-              value: text.char,
-              width: textWidth,
-              height: textHeight,
-              x: Math.ceil(currentWidth),
-              y: Math.ceil(currentHeight + blockHeight),
-              metrics: text.metrics,
-            })
-          )
-
+        if (currentWidth + textWidth > ctxRenderWidth) {
           currentWidth += textWidth
-        } else {
-          line++
-          lineCtx = this.createLineElement()
-          paragraph.push(lineCtx)
           blockHeight += maxHeight
           currentWidth = 0
         }
+        // offset
+        if (blockHeight === 0) {
+          blockHeight = maxHeight
+        }
+        const element = this.createTextElement({
+          node: text,
+          value: text.char,
+          width: textWidth,
+          height: textHeight,
+          x: Math.ceil(currentWidth),
+          y: Math.ceil(currentHeight + blockHeight),
+          metrics: text.metrics,
+        })
+
+        element.idx = j
+        paragraph.renderChildren[j] = element
+        currentWidth += textWidth
       }
       paragraph.height = blockHeight
       paragraph.metrics.y = blockHeight
@@ -154,25 +146,18 @@ export default class BlockContainer extends Base {
   computedPositionElementByXY(x: number, y: number) {
     const blocks = this.blocks
     let p = 0
-    let l = 0
     let idx = 0
     let preHeight = this.config.paddingY
     for (; p < blocks.length; p++) {
+      idx = blocks[p].content.length - 1
       if (
         y < preHeight + blocks[p].height &&
         blocks[p].positionInParagraph({ x, y })
       ) {
         const paragraph = blocks[p]
         const position = paragraph.positionIn({ x, y })
-        if (position) {
-          let [line, textIndex] = position
-          l = line
-          idx = textIndex
-        } else {
-          l = paragraph.children.length - 1
-          idx =
-            paragraph.children[paragraph.children.length - 1].children.length -
-            1
+        if (position !== undefined) {
+          idx = position
         }
         break
       } else {
@@ -180,9 +165,12 @@ export default class BlockContainer extends Base {
       }
     }
 
+    if (p === blocks.length) {
+      p -= 1
+    }
+
     return {
       p,
-      l,
       i: idx,
     }
   }

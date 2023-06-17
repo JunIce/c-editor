@@ -1,8 +1,12 @@
 import BlockContainer from "./core/BlockContainer"
-import { addEventListener, computedTextMetries, logs, randomColor } from "./utils"
+import { addEventListener, computedTextMetries, randomColor } from "./utils"
 import { EventManager, EventType, NativeEventType } from "./core/EventManager"
 import { Cursor, PositionIdx } from "./core/Cursor"
-import { LineCtx, ParagraphCtx, RenderElementText, createCanvasCtx } from "./core/CanvasCtx"
+import {
+  ParagraphCtx,
+  RenderElementText,
+  createCanvasCtx,
+} from "./core/CanvasCtx"
 import { Selection } from "./core/Selection"
 import { RangeCtx, createRangeCtx } from "./core/Range"
 import { onMouseDown } from "./core/events/mousedown"
@@ -40,8 +44,8 @@ export default class Editor {
     this.cursor = new Cursor(this)
     this.selection = new Selection(this)
 
-    this.config.width = options.width || 1000
-    this.config.height = options.height || 500
+    this.config.width = this.container.clientWidth || 1000
+    this.config.height = this.container.clientHeight || 500
     this.canvas = createCanvasCtx({
       width: this.config.width,
       height: this.config.height,
@@ -94,7 +98,7 @@ export default class Editor {
       onMouseDown(this),
       false
     )
-    addEventListener(this.canvas, "mousemove", () => { }, false)
+    addEventListener(this.canvas, "mousemove", () => {}, false)
   }
 
   _deleteText() {
@@ -102,43 +106,33 @@ export default class Editor {
     console.log("", currentBlock)
 
     // cursor > 0
-    if (this.cursor.location.i > 0) {
+    if (this.cursor.location.i > -1) {
       let idx = this.cursor.location.i
-      let l = this.cursor.location.l - 1
-      while (l >= 0) {
-        idx += currentBlock.children[l].children.length
-        l--
-      }
       currentBlock.delete(idx)
       this.cursor.location.i -= 1
       this.cursor.move()
-    } else if (this.cursor.location.i == 0 && currentBlock.content.length > 0) {
-      if (this.cursor.location.l > 0) {
-        this.cursor.location.l -= 1
-        this.cursor.location.i =
-          currentBlock.children[this.cursor.location.l].children.length
-        this.cursor.move()
-        currentBlock.deleteLine(this.cursor.location.l + 1)
-      }
-      // not last paragraph
-      else if (this.cursor.location.p > 0) {
+    } else if (
+      this.cursor.location.i == -1 &&
+      currentBlock.content.length > 0
+    ) {
+      if (this.cursor.location.p > 0) {
         //merge to before
         const beforeBlock = this.blocksContainer.getBlockByIndex(
           this.cursor.location.p - 1
         )
 
+        const lastIndex = beforeBlock.content.length - 1
+        this.cursor.location.i = lastIndex
+
         beforeBlock.content.splice(
-          beforeBlock.content.length - 1,
+          beforeBlock.content.length,
           0,
           ...currentBlock.content
         )
 
-        const lastCursor = beforeBlock.lastCursorPosition()
         this.blocksContainer.deleteBlock(this.cursor.location.p)
-
         this.cursor.location.p -= 1
-        this.cursor.location.l = lastCursor.l
-        this.cursor.location.i = lastCursor.i
+
         this.cursor.move()
       }
     }
@@ -163,8 +157,9 @@ export default class Editor {
     let y = offsetTop
 
     if (result.i >= 0) {
-      const element = this.blocksContainer.blocks[result.p]?.children[result.l]
-        ?.children[result.i] as RenderElementText
+      const element = this.blocksContainer.blocks[result.p].renderChildren[
+        result.i
+      ] as RenderElementText
 
       if (element) {
         const { rightTop } = computedTextMetries(element)
@@ -173,8 +168,8 @@ export default class Editor {
         y += rightTop[1]
       }
     } else {
-      const first = this.blocksContainer.blocks[result.p]?.children[result.l]
-        ?.children[0] as RenderElementText
+      const first = this.blocksContainer.blocks[result.p]
+        .renderChildren[0] as RenderElementText
       if (first) {
         const { leftTop } = computedTextMetries(first)
 
@@ -191,22 +186,12 @@ export default class Editor {
 
   render() {
     const ctx = this.ctx
-    logs(1)
-    ctx.clearRect(
-      0,
-      0,
-      this.config.width,
-      this.config.height
-    )
+    ctx.clearRect(0, 0, this.config.width, this.config.height)
 
     const data = this.blocksContainer.renderBlocks
 
-    data.forEach((paragraphs, idx) => {
-      paragraphs.children.forEach((line) =>
-        line.children.forEach((el) => {
-          el.render()
-        })
-      )
+    data.forEach((paragraphs) => {
+      paragraphs.renderChildren.forEach((el) => el.render())
     })
   }
 
@@ -224,13 +209,22 @@ export default class Editor {
     this.ctx.save()
     this.ctx.beginPath()
 
-    this.ctx.strokeStyle = randomColor();
-    this.ctx.strokeRect(leftTop[0] + this.config.paddingX, leftTop[1] + this.config.paddingY, this.renderSize.width, y)
+    this.ctx.strokeStyle = randomColor()
+    this.ctx.strokeRect(
+      leftTop[0] + this.config.paddingX,
+      leftTop[1] + this.config.paddingY,
+      this.renderSize.width,
+      y
+    )
 
     this.ctx.fillStyle = "red"
     this.ctx.font = "24px 微软雅黑"
     this.ctx.textBaseline = "top"
-    this.ctx.fillText(idx + '', leftTop[0] + this.config.paddingX, leftTop[1] + this.config.paddingY)
+    this.ctx.fillText(
+      idx + "",
+      leftTop[0] + this.config.paddingX,
+      leftTop[1] + this.config.paddingY
+    )
 
     this.ctx.closePath()
     this.ctx.restore()
