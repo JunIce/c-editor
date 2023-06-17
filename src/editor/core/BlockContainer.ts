@@ -46,13 +46,14 @@ export default class BlockContainer extends Base {
     const idx = currentBlock.getContentStrIndexByCursor(
       this.editor.cursor.location
     )
-    block.content = currentBlock.content.slice(idx + 2)
-    currentBlock.content = currentBlock.content.slice(0, idx + 2)
+    block.content = currentBlock.content.slice(idx + 1)
+    currentBlock.content = currentBlock.content.slice(0, idx + 1)
 
     this.blocks.splice(p + 1, 0, block)
     this.editor.render()
     this.editor.cursor.location.p += 1
-    this.editor.cursor.location.i = 0
+    this.editor.cursor.location.i = -1
+    this.editor.cursor.move()
   }
 
   push(data: string) {
