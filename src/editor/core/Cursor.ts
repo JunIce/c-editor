@@ -100,10 +100,23 @@ export class Cursor extends Base {
           this.location.i -= 1
         }
       }
-    } else if (keyCode === KeyCode.ARROW_UP) {
-      // #todo move up
-    } else if (keyCode === KeyCode.ARROW_DOWN) {
-      // #todo move down
+    } else if (keyCode === KeyCode.ARROW_UP || keyCode === KeyCode.ARROW_DOWN) {
+      let { x, y } = this.location
+      x -= 5
+
+      y += this._mockCursor!.clientHeight / 2
+
+      if (keyCode === KeyCode.ARROW_UP) {
+        y -= this._mockCursor!.clientHeight
+      } else if (keyCode === KeyCode.ARROW_DOWN) {
+        y += this._mockCursor!.clientHeight / 2
+      }
+
+      const position = this.editor.blocksContainer.computedPositionElementByXY(
+        x,
+        y
+      )
+      this.setPosition(position)
     }
 
     this.move()

@@ -151,10 +151,8 @@ export default class Editor {
   }
 
   _computedTargetCursorPosition(result: PositionIdx) {
-    let { offsetTop, offsetLeft } = this.container
-
-    let x = offsetLeft
-    let y = offsetTop
+    let x = 0
+    let y = 0
 
     if (result.i >= 0) {
       const element = this.blocksContainer.blocks[result.p].renderChildren[
