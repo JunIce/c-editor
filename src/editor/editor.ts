@@ -189,14 +189,13 @@ export default class Editor {
 
   render() {
     const ctx = this.ctx
-    const { startNode, endNode, collapsed } = this.selection
     ctx.clearRect(0, 0, this.config.width, this.config.height)
 
     const data = this.blocksContainer.renderBlocks
-
+    const { startNode, endNode } = this.selection.getRange()
     data.forEach((paragraph, pIndex) => {
       paragraph.renderChildren.forEach((el, tIndex) => {
-        if (collapsed === false && startNode && endNode) {
+        if (this.selection.collapsed === false) {
           if (pIndex === startNode.p && tIndex > startNode.i) {
             el.renderBg()
           } else if (pIndex === endNode.p && tIndex <= endNode.i) {
