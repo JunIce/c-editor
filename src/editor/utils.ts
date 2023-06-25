@@ -49,3 +49,5 @@ export const calcuateNumber = (v: number) => Number(v.toFixed(2))
 export const logs = (str: any) => console.log(str)
 
 export const randomColor = () => '#' + (Math.random() * 0xFFFFFF << 0).toString(16)
+
+export const isRangeCollapsed = (s: any, e: any) => s.p === e.p && s.i === e.i

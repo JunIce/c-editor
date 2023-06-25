@@ -10,6 +10,7 @@ export enum EventType {
   INSERT_PARAGRAPH = "INSERT_PARAGRAPH",
   DIRECTION_KEY = "DIRECTION_KEY",
   MOVE_CURSOR = "MOVE_CURSOR",
+  SELECTION_RANGE = "SELECTION_RANGE",
 }
 
 export class EventManager {

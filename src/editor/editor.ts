@@ -8,8 +8,10 @@ import {
   createCanvasCtx,
 } from "./core/CanvasCtx"
 import { Selection } from "./core/Selection"
-import { RangeCtx, createRangeCtx } from "./core/Range"
+import { createRangeCtx } from "./core/Range"
 import { onMouseDown } from "./core/events/mousedown"
+import { onMouseMove } from "./core/events/mousemove"
+import { onMouseUp } from "./core/events/mouseup"
 
 export interface ConfigProps {
   width: number
@@ -26,7 +28,7 @@ export default class Editor {
   dpr: number
   cursor: Cursor
   selection: Selection
-
+  isPointerDown: boolean
   config: ConfigProps = {
     width: 1000,
     height: 500,
@@ -43,6 +45,7 @@ export default class Editor {
     this.events = new EventManager(this)
     this.cursor = new Cursor(this)
     this.selection = new Selection(this)
+    this.isPointerDown = false
 
     this.config.width = this.container.clientWidth || 1000
     this.config.height = this.container.clientHeight || 500
@@ -82,6 +85,7 @@ export default class Editor {
 
   _bindEvents() {
     this.events.on(EventType.RENDER, this.render.bind(this))
+    this.events.on(EventType.SELECTION_RANGE, this.render.bind(this))
     this.events.on(EventType.TEXT_DELETE, this._deleteText.bind(this))
     this.events.on(
       EventType.INSERT_PARAGRAPH,
@@ -98,7 +102,8 @@ export default class Editor {
       onMouseDown(this),
       false
     )
-    addEventListener(this.canvas, "mousemove", () => {}, false)
+    addEventListener(this.canvas, "mousemove", onMouseMove(this), false)
+    addEventListener(this.canvas, "mouseup", onMouseUp(this), false)
   }
 
   _deleteText() {
@@ -184,12 +189,24 @@ export default class Editor {
 
   render() {
     const ctx = this.ctx
+    const { startNode, endNode, collapsed } = this.selection
     ctx.clearRect(0, 0, this.config.width, this.config.height)
 
     const data = this.blocksContainer.renderBlocks
 
-    data.forEach((paragraphs) => {
-      paragraphs.renderChildren.forEach((el) => el.render())
+    data.forEach((paragraph, pIndex) => {
+      paragraph.renderChildren.forEach((el, tIndex) => {
+        if (collapsed === false && startNode && endNode) {
+          if (pIndex === startNode.p && tIndex > startNode.i) {
+            el.renderBg()
+          } else if (pIndex === endNode.p && tIndex <= endNode.i) {
+            el.renderBg()
+          } else if (pIndex > startNode.p && pIndex < endNode.p) {
+            el.renderBg()
+          }
+        }
+        el.render()
+      })
     })
   }
 

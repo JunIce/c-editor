@@ -8,6 +8,7 @@ export function onMouseDown(editor: Editor) {
 
     const scrollTop = editor.scrollTop
     // editor.testPoint(clientX - offsetLeft, clientY + scrollTop - offsetTop)
+    editor.selection.reset()
     // 判断是否是点击区域
     if (
       clientX >= offsetLeft + paddingX &&
@@ -20,7 +21,9 @@ export function onMouseDown(editor: Editor) {
         clientY + scrollTop - offsetTop - paddingY
       )
       console.log("", position)
+      editor.isPointerDown = true
 
+      editor.selection.startNode = position
       editor.cursor.setPosition(position)
       editor.cursor.move()
       e.preventDefault()

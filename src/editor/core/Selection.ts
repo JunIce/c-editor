@@ -1,24 +1,21 @@
 import Editor from "../editor"
 import Base from "./Base"
-import { RangeCtx } from "./Range"
 
 export class Selection extends Base {
-  startNode: RangeCtx | null
-  endNode: RangeCtx | null
-  _range: RangeCtx | null
+  startNode: any
+  endNode: any
+  collapsed: boolean
 
   constructor(editor: Editor) {
     super(editor)
     this.startNode = null
     this.endNode = null
-    this._range = null
+    this.collapsed = true
   }
 
-  getRange() {
-    return this._range
-  }
-
-  setRange(range: RangeCtx) {
-    this._range = range
+  reset() {
+    this.collapsed = true
+    this.startNode = null
+    this.endNode = null
   }
 }

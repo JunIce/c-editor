@@ -112,6 +112,10 @@ export class Cursor extends Base {
         y += this._mockCursor!.clientHeight / 2
       }
 
+      if (y <= 0) {
+        y = 4
+      }
+
       const position = this.editor.blocksContainer.computedPositionElementByXY(
         x,
         y

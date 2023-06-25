@@ -268,6 +268,21 @@ export const createRenderText = (editor: Editor) => {
         ctx.closePath()
         ctx.restore()
       },
+      renderBg: () => {
+        const ctx = editor.ctx
+        ctx.save()
+
+        ctx.fillStyle = "rgba(174, 242, 249, 0.7)"
+        
+        ctx.fillRect(
+          el.x + editor.config.paddingX,
+          el.y + editor.config.paddingY - el.height,
+          el.width,
+          el.height
+        )
+
+        ctx.restore()
+      },
       positionIn: ({ x, y }: MouseXY) => {
         const text = el
         const { leftTop, rightBottom } = computedTextMetries(text)
